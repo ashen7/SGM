@@ -29,16 +29,18 @@ namespace sgm_util {
 
 void census_transform_5x5(const std::uint8_t* source, std::uint32_t* census, 
                           const int& height, const int& width) {
-	if (source == nullptr || census == nullptr || width <= 5 || height <= 5) {
+	if (source == nullptr 
+            || census == nullptr 
+            || height <= 5 
+            || width <= 5) {
 		return;
 	}
 
 	// 逐像素计算census值
 	for (int i = 2; i < height - 2; i++) {
 		for (int j = 2; j < width - 2; j++) {
-			
 			// 中心像素值
-			const std::uint8_t gray_center = source[i * width + j];
+			const std::uint8_t center_gray = source[i * width + j];
 			
 			// 遍历大小为5x5的窗口内邻域像素，逐一比较像素值与中心像素值的的大小，计算census值
 			std::uint32_t census_val = 0u;
@@ -46,7 +48,7 @@ void census_transform_5x5(const std::uint8_t* source, std::uint32_t* census,
 				for (int c = -2; c <= 2; c++) {
 					census_val <<= 1;
 					const std::uint8_t gray = source[(i + r) * width + j + c];
-					if (gray < gray_center) {
+					if (gray < center_gray) {
 						census_val += 1;
 					}
 				}
@@ -89,10 +91,12 @@ void census_transform_9x7(const std::uint8_t* source, std::uint64_t* census,
 	}
 }
 
-std::uint8_t Hamming32(const std::uint32_t& x, const std::uint32_t& y) {
-	std::uint32_t dist = 0, val = x ^ y;
+std::uint8_t HammingDistance(const std::uint32_t& x, const std::uint32_t& y) {
+	// 计算两个等长二进制串不相同位的个数
+	std::uint32_t dist = 0;
+    // 先x和y进行异或 val中位是1的个数就是汉明距离
+    std::uint32_t val = x ^ y;
 
-	// Count the number of set bits
 	while (val) {
 		++dist;
 		val &= val - 1;
@@ -101,7 +105,7 @@ std::uint8_t Hamming32(const std::uint32_t& x, const std::uint32_t& y) {
 	return static_cast<std::uint8_t>(dist);
 }
 
-std::uint8_t Hamming64(const std::uint64_t& x, const std::uint64_t& y) {
+std::uint8_t HammingDistance(const std::uint64_t& x, const std::uint64_t& y) {
 	std::uint64_t dist = 0, val = x ^ y;
 
 	// Count the number of set bits
@@ -575,9 +579,9 @@ void RemoveSpeckles(float* disparity_map, const int& height, const int& width,
 					const int col = pixel.second;
 					const auto& disp_base = disparity_map[row * width + col];
 					// 8邻域遍历
-					for(int r=-1;r<=1;r++) {
-						for(int c=-1;c<=1;c++) {
-							if(r==0&&c==0) {
+					for (int r = -1; r <= 1; r++) {
+						for (int c = -1; c <= 1; c++) {
+							if (r == 0 && c == 0) {
 								continue;
 							}
 							int rowr = row + r;
@@ -597,8 +601,8 @@ void RemoveSpeckles(float* disparity_map, const int& height, const int& width,
 			} while (next < vec.size());
 
 			// 把连通域面积小于阈值的区域视差全设为无效值
-			if(vec.size() < min_speckle_aera) {
-				for(auto& pix:vec) {
+			if (vec.size() < min_speckle_aera) {
+				for (auto& pix : vec) {
 					disparity_map[pix.first * width + pix.second] = invalid_val;
 				}
 			}

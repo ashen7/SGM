@@ -3,7 +3,7 @@
  *
  *       Filename:  main.cpp
  *
- *    Description:  
+ *    Description:  SGM 
  *
  *        Version:  1.0
  *        Created:  10/27/2020 04:27:50 PM
@@ -21,8 +21,8 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
-#include <numeric>
 #include <memory>
+#include <numeric>
 
 #include <glog/logging.h>
 #include <gflags/gflags.h>
@@ -30,15 +30,17 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
+#include "sgm_util.h"
 #include "semi_global_matching.h"
 
-DEFINE_string(left_image,           "data/cone/img0.png",   "left image path");
-DEFINE_string(right_image,          "data/cone/img1.png",   "right image path");
-DEFINE_string(disp_map_save_path,   "results/disp_map.png", "disparity map save path");
-DEFINE_int32(min_disp,              0,                      "min disparity");
-DEFINE_int32(max_disp,              64,                     "min disparity");
+DEFINE_string(left_image,                   "data/cone/img0.png",           "left image path");
+DEFINE_string(right_image,                  "data/cone/img1.png",           "right image path");
+DEFINE_string(disp_map_save_path,           "results/disp_map.png", "       disparity map save path");
+DEFINE_string(disp_map_color_save_path,     "results/disp_map_color.png",   "disparity map color save path");
+DEFINE_int32(min_disp,                      0,                              "min disparity");
+DEFINE_int32(max_disp,                      64,                             "min disparity");
 
-constexpr auto Invalid_Float = std::numeric_limits<float>::infinity();
+static constexpr float Invalid_Float = std::numeric_limits<float>::infinity();
 
 int main(int argc, char* argv[]) {
     google::ParseCommandLineFlags(&argc, &argv, true);
@@ -52,6 +54,7 @@ int main(int argc, char* argv[]) {
     std::string right_path = FLAGS_right_image;
 
     cv::Mat left_image = cv::imread(left_path, cv::IMREAD_COLOR);
+    cv::Mat right_image = cv::imread(right_path, cv::IMREAD_COLOR);
     cv::Mat left_gray_image = cv::imread(left_path, cv::IMREAD_GRAYSCALE);
     cv::Mat right_gray_image = cv::imread(right_path, cv::IMREAD_GRAYSCALE);
 
@@ -161,15 +164,16 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    cv::imshow("left image", left_image);
+    cv::imshow("right image", right_image);
     cv::imshow("disparity map", disp_mat);
     cv::Mat disp_color;
-    //applyColorMap(disp_mat, disp_color, cv::COLORMAP_JET);
-    //cv::imshow("视差图-伪彩", disp_color);
+    applyColorMap(disp_mat, disp_color, cv::COLORMAP_JET);
+    cv::imshow("disparity map color", disp_color);
 
     // 保存结果
-    //std::string disp_color_map_path = argc[1]; disp_color_map_path += ".c.png";
     cv::imwrite(FLAGS_disp_map_save_path, disp_mat);
-    //cv::imwrite(disp_color_map_path, disp_color);
+    cv::imwrite(FLAGS_disp_map_color_save_path, disp_color);
     cv::waitKey(0);
 
     google::ShutDownCommandLineFlags();
