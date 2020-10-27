@@ -1,83 +1,69 @@
-/* -*-c++-*- SemiGlobalMatching - Copyright (C) 2020.
-* Author	: Yingsong Li(Ethan Li) <ethan.li.whu@gmail.com>
-* Describe	: main
-*/
-
-#include "stdafx.h"
-#include "SemiGlobalMatching.h"
+#include <cstdio>
+#include <cstdint>
+#include <iostream>
+#include <vector>
 #include <chrono>
-using namespace std::chrono;
+#include <memory>
 
-// opencv library
 #include <opencv2/opencv.hpp>
-#ifdef _DEBUG
-#pragma comment(lib,"opencv_world310d.lib")
-#else
-#pragma comment(lib,"opencv_world310.lib")
-#endif
+
+#include "semi_global_matching.h"
 
 /**
- * \brief
- * \param argv 3
  * \param argc argc[1]:左影像路径 argc[2]: 右影像路径 argc[3]: 最小视差[可选，默认0] argc[4]: 最大视差[可选，默认64]
  * \param eg. ..\Data\cone\im2.png ..\Data\cone\im6.png 0 64
  * \param eg. ..\Data\Reindeer\view1.png ..\Data\Reindeer\view5.png 0 128
- * \return
  */
-int main(int argv, char** argc)
-{
+
+int main(int argv, char* argc[]) {
     if (argv < 3) {
         std::cout << "参数过少，请至少指定左右影像路径！" << std::endl;
         return -1;
     }
 
-    //···············································································//
-    // 读取影像
-    std::string path_left = argc[1];
-    std::string path_right = argc[2];
+    // 读取左图右图
+    std::string left_path = argc[1];
+    std::string right_path = argc[2];
 
-    cv::Mat img_left_c = cv::imread(path_left, cv::IMREAD_COLOR);
-    cv::Mat img_left = cv::imread(path_left, cv::IMREAD_GRAYSCALE);
-    cv::Mat img_right = cv::imread(path_right, cv::IMREAD_GRAYSCALE);
+    cv::Mat left_image = cv::imread(left_path, cv::IMREAD_COLOR);
+    cv::Mat left_gray_image = cv::imread(left_path, cv::IMREAD_GRAYSCALE);
+    cv::Mat right_gray_image = cv::imread(right_path, cv::IMREAD_GRAYSCALE);
 
-    if (img_left.data == nullptr || img_right.data == nullptr) {
-        std::cout << "读取影像失败！" << std::endl;
+    if (left_gray_image.data == nullptr || right_gray_image.data == nullptr) {
+        std::cout << "读取图片失败！" << std::endl;
         return -1;
     }
-    if (img_left.rows != img_right.rows || img_left.cols != img_right.cols) {
-        std::cout << "左右影像尺寸不一致！" << std::endl;
+    if (left_gray_image.rows != right_gray_image.rows 
+            || left_gray_image.cols != right_gray_image.cols) {
+        std::cout << "左右图片尺寸不一致！" << std::endl;
         return -1;
     }
 
-
-    //···············································································//
-    const sint32 width = static_cast<uint32>(img_left.cols);
-    const sint32 height = static_cast<uint32>(img_right.rows);
+    const std::int32_t height = static_cast<std::int32_t>(right_gray_image.rows);
+    const std::int32_t width = static_cast<std::int32_t>(left_gray_image.cols);
 
     // 左右影像的灰度数据
-    auto bytes_left = new uint8[width * height];
-    auto bytes_right = new uint8[width * height];
+    auto left_image_data = std::shared_ptr<std::uint8_t>(new std::uint8_t[width * height], [](std::uint8_t* data) { delete []data; });
+    auto right_image_data = std::shared_ptr<std::uint8_t>(new std::uint8_t[width * height], [](std::uint8_t* data) { delete []data; });
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            bytes_left[i * width + j] = img_left.at<uint8>(i, j);
-            bytes_right[i * width + j] = img_right.at<uint8>(i, j);
+            left_image_data.get()[i * width + j] = left_gray_image.at<std::uint8_t>(i, j);
+            right_image_data.get()[i * width + j] = right_gray_image.at<std::uint8_t>(i, j);
         }
     }
-
-    printf("Loading Views...Done!\n");
 
     // SGM匹配参数设计
     SemiGlobalMatching::SGMOption sgm_option;
     // 聚合路径数
     sgm_option.num_paths = 8;
     // 候选视差范围
-    sgm_option.min_disparity = argv < 4 ? 0 : atoi(argc[3]);
-    sgm_option.max_disparity = argv < 5 ? 64 : atoi(argc[4]);
+    sgm_option.min_disparity = argv < 4 ? 0 : std::atoi(argc[3]);
+    sgm_option.max_disparity = argv < 5 ? 64 : std::atoi(argc[4]);
     // census窗口类型
     sgm_option.census_size = SemiGlobalMatching::Census5x5;
     // 一致性检查
     sgm_option.is_check_lr = true;
-    sgm_option.lrcheck_thres = 1.0f;
+    sgm_option.lr_check_thresh = 1.0f;
     // 唯一性约束
     sgm_option.is_check_unique = true;
     sgm_option.uniqueness_ratio = 0.99;
@@ -95,8 +81,6 @@ int main(int argv, char** argc)
 
     // 定义SGM匹配类实例
     SemiGlobalMatching sgm;
-
-    //···············································································//
     // 初始化
 	printf("SGM Initializing...\n");
     auto start = std::chrono::steady_clock::now();
@@ -108,13 +92,12 @@ int main(int argv, char** argc)
     auto tt = duration_cast<std::chrono::milliseconds>(end - start);
     printf("SGM Initializing Done! Timing : %lf s\n\n", tt.count() / 1000.0);
 
-    //···············································································//
     // 匹配
 	printf("SGM Matching...\n");
     start = std::chrono::steady_clock::now();
     // disparity数组保存子像素的视差结果
-    auto disparity = new float32[uint32(width * height)]();
-    if (!sgm.Match(bytes_left, bytes_right, disparity)) {
+    auto disparity = std::shared_ptr<std::uint32_t>(new std::uint32_t[width * height], [](std::uint32_t* data) { delete []data; });
+    if (!sgm.Match(left_image_data, right_image_data, disparity)) {
         std::cout << "SGM匹配失败！" << std::endl;
         return -2;
     }
@@ -122,23 +105,22 @@ int main(int argv, char** argc)
     tt = duration_cast<std::chrono::milliseconds>(end - start);
     printf("\nSGM Matching...Done! Timing :   %lf s\n", tt.count() / 1000.0);
 
-    //···············································································//
 	// 显示视差图
     // 注意，计算点云不能用disp_mat的数据，它是用来显示和保存结果用的。计算点云要用上面的disparity数组里的数据，是子像素浮点数
     cv::Mat disp_mat = cv::Mat(height, width, CV_8UC1);
     float min_disp = width, max_disp = -width;
-    for (sint32 i = 0; i < height; i++) {
-        for (sint32 j = 0; j < width; j++) {
-            const float32 disp = disparity[i * width + j];
+    for (std::int32_t i = 0; i < height; i++) {
+        for (std::int32_t j = 0; j < width; j++) {
+            const float disp = disparity[i * width + j];
             if (disp != Invalid_Float) {
                 min_disp = std::min(min_disp, disp);
                 max_disp = std::max(max_disp, disp);
             }
         }
     }
-    for (sint32 i = 0; i < height; i++) {
-        for (sint32 j = 0; j < width; j++) {
-            const float32 disp = disparity[i * width + j];
+    for (std::int32_t i = 0; i < height; i++) {
+        for (std::int32_t j = 0; j < width; j++) {
+            const float disp = disparity[i * width + j];
             if (disp == Invalid_Float) {
                 disp_mat.data[i * width + j] = 0;
             }
@@ -159,19 +141,8 @@ int main(int argv, char** argc)
     cv::imwrite(disp_map_path, disp_mat);
     cv::imwrite(disp_color_map_path, disp_color);
 
-
     cv::waitKey(0);
 
-    //···············································································//
-    // 释放内存
-    delete[] disparity;
-    disparity = nullptr;
-    delete[] bytes_left;
-    bytes_left = nullptr;
-    delete[] bytes_right;
-    bytes_right = nullptr;
-
-    system("pause");
     return 0;
 }
 
