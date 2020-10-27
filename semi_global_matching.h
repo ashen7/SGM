@@ -17,6 +17,8 @@
  */
 
 #pragma once
+#include <cstdint>
+#include <cstddef>
 #include <vector>
 
 class SemiGlobalMatching {
@@ -62,6 +64,7 @@ public:
 		             p1(10), p2_init(150) { }
 	};
 
+public:
 	/**
 	 * \brief 类的初始化，完成一些内存的预分配、参数的预设置等
 	 * \param height	输入，核线像对影像高
@@ -72,11 +75,11 @@ public:
 
 	/**
 	 * \brief 执行匹配
-	 * \param img_left	输入，左影像数据指针 
-	 * \param img_right	输入，右影像数据指针
-	 * \param disp_left	输出，左影像视差图指针，预先分配和影像等尺寸的内存空间
+	 * \param left_image	输入，左影像数据指针 
+	 * \param right_image	输入，右影像数据指针
+	 * \param left_disp	输出，左影像视差图指针，预先分配和影像等尺寸的内存空间
 	 */
-	bool Match(const std::uint8_t* img_left, const std::uint8_t* img_right, float* disp_left);
+	bool Match(const std::uint8_t* left_image, const std::uint8_t* right_image, float* left_disp);
 
 	/**
 	 * \brief 重设
@@ -111,6 +114,7 @@ private:
 	/** \brief 内存释放	 */
 	void Release();
 
+private:
 	/** \brief SGM参数	 */
 	SGMOption option_;
 
@@ -142,7 +146,7 @@ private:
 	// →    ←	 1    2
 	// ↗ ↑ ↖   8  4  6
 	/** \brief 聚合匹配代价-方向1	*/
-	std::uint8_t* cost_aggr_1_;
+    std::uint8_t* cost_aggr_1_;
 	/** \brief 聚合匹配代价-方向2	*/
 	std::uint8_t* cost_aggr_2_;
 	/** \brief 聚合匹配代价-方向3	*/

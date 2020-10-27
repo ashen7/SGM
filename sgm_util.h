@@ -25,9 +25,6 @@
 #endif
 
 namespace sgm_util {
-	//······ census工具集
-	// census变换
-
 	/**
 	 * \brief census变换
 	 * \param source	输入，影像数据
@@ -36,10 +33,10 @@ namespace sgm_util {
 	 * \param height	输入，影像高
 	 */
 	void census_transform_5x5(const std::uint8_t* source, std::uint32_t* census, const std::int32_t& width, const std::int32_t& height);
-	void census_transform_9x7(const std::uint8_t* source, uint64* census, const std::int32_t& width, const std::int32_t& height);
+	void census_transform_9x7(const std::uint8_t* source, std::uint64_t* census, const std::int32_t& width, const std::int32_t& height);
 	// Hamming距离
 	std::uint8_t Hamming32(const std::uint32_t& x, const std::uint32_t& y);
-	std::uint8_t Hamming64(const uint64& x, const uint64& y);
+	std::uint8_t Hamming64(const std::uint64_t& x, const std::uint64_t& y);
 
 	/**
 	 * \brief 左右路径聚合 → ←

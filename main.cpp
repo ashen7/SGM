@@ -36,7 +36,7 @@ DEFINE_string(right_image,   "data/cone/img1.png", "right image path");
 DEFINE_int32(min_disp,       0,                    "min disparity");
 DEFINE_int32(max_disp,       64,                   "min disparity");
 
-int main(int argv, char* argc[]) {
+int main(int argc, char* argv[]) {
     google::ParseCommandLineFlags(&argc, &argv, true);
     google::InitGoogleLogging(argv[0]);
     google::SetLogDestination(google::GLOG_INFO, "log/");
@@ -61,12 +61,15 @@ int main(int argv, char* argc[]) {
         return -1;
     }
 
-    const std::int32_t height = static_cast<std::int32_t>(right_gray_image.rows);
+    const std::int32_t height = static_cast<std::int32_t>(left_gray_image.rows);
     const std::int32_t width = static_cast<std::int32_t>(left_gray_image.cols);
+    const std::int32_t image_size = height * width;
 
     // 左右影像的灰度数据
-    auto left_image_data = std::shared_ptr<std::uint8_t>(new std::uint8_t[width * height], [](std::uint8_t* data) { delete []data; });
-    auto right_image_data = std::shared_ptr<std::uint8_t>(new std::uint8_t[width * height], [](std::uint8_t* data) { delete []data; });
+    auto left_image_data = std::shared_ptr<std::uint8_t>(new std::uint8_t[image_size], 
+                                                         [](std::uint8_t* data) { delete []data; });
+    auto right_image_data = std::shared_ptr<std::uint8_t>(new std::uint8_t[image_size], 
+                                                          [](std::uint8_t* data) { delete []data; });
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
             left_image_data.get()[i * width + j] = left_gray_image.at<std::uint8_t>(i, j);
@@ -99,35 +102,35 @@ int main(int argv, char* argc[]) {
     // 视差图填充的结果并不可靠，若工程，不建议填充，若科研，则可填充
     sgm_option.is_fill_holes = false;
 
-    printf("w = %d, h = %d, d = [%d,%d]\n\n", width, height, sgm_option.min_disparity, sgm_option.max_disparity);
     LOG(INFO) << "h = " << height << ", w = " << width << ", " << "d = [" 
-              << sgm_option.min_disparity << ", " << sgm_option.max_disparity << "]\n"
+              << sgm_option.min_disparity << ", " << sgm_option.max_disparity << "]\n";
 
-    //// 定义SGM匹配类实例
-    //SemiGlobalMatching sgm;
-    //// 初始化
-	//printf("SGM Initializing...\n");
-    //auto start = std::chrono::steady_clock::now();
-    //if (!sgm.Initialize(width, height, sgm_option)) {
-    //    LOG(ERROR) << "SGM初始化失败！" << std::endl;
-    //    return -2;
-    //}
-    //auto end = std::chrono::steady_clock::now();
-    //auto tt = duration_cast<std::chrono::milliseconds>(end - start);
-    //printf("SGM Initializing Done! Timing : %lf s\n\n", tt.count() / 1000.0);
+    // 定义SGM匹配类实例
+    SemiGlobalMatching sgm;
+    // 初始化
+	LOG(INFO) << "SGM Initializing...";
+    auto start = std::chrono::steady_clock::now();
+    if (!sgm.Initialize(height, width, sgm_option)) {
+        LOG(ERROR) << "SGM初始化失败！" << std::endl;
+        return -1;
+    }
+    auto end = std::chrono::steady_clock::now();
+    auto cost_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+    LOG(INFO) << "SGM Initializing Done! Timing : " << cost_time.count() / 1000.0 << "s";
 
-    //// 匹配
-	//printf("SGM Matching...\n");
-    //start = std::chrono::steady_clock::now();
-    //// disparity数组保存子像素的视差结果
-    //auto disparity = std::shared_ptr<std::uint32_t>(new std::uint32_t[width * height], [](std::uint32_t* data) { delete []data; });
-    //if (!sgm.Match(left_image_data, right_image_data, disparity)) {
-    //    LOG(ERROR) << "SGM匹配失败！" << std::endl;
-    //    return -2;
-    //}
-    //end = std::chrono::steady_clock::now();
-    //tt = duration_cast<std::chrono::milliseconds>(end - start);
-    //printf("\nSGM Matching...Done! Timing :   %lf s\n", tt.count() / 1000.0);
+    // 匹配
+	LOG(INFO) << "SGM Matching...";
+    start = std::chrono::steady_clock::now();
+    // disparity数组保存子像素的视差结果
+    auto disparity = std::shared_ptr<float>(new std::float[image_size], 
+                                            [](std::float* data) { delete []data; });
+    if (!sgm.Match(left_image_data, right_image_data, disparity)) {
+        LOG(ERROR) << "SGM匹配失败！";
+        return -1;
+    }
+    end = std::chrono::steady_clock::now();
+    cost_time = duration_cast<std::chrono::milliseconds>(end - start);
+    LOG(INFO) << "SGM Matching...Done! Timing : " << cost_time.count() / 1000.0 << "s";
 
 	//// 显示视差图
     //// 注意，计算点云不能用disp_mat的数据，它是用来显示和保存结果用的。计算点云要用上面的disparity数组里的数据，是子像素浮点数

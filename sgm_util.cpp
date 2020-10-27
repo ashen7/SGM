@@ -56,7 +56,7 @@ void census_transform_5x5(const std::uint8_t* source, std::uint32_t* census,
 	}
 }
 
-void census_transform_9x7(const std::uint8_t* source, uint64* census, 
+void census_transform_9x7(const std::uint8_t* source, std::uint64_t* census, 
                           const std::int32_t& height, const std::int32_t& width) {
 	if (source == nullptr || census == nullptr || width <= 9 || height <= 7) {
 		return;
@@ -70,7 +70,7 @@ void census_transform_9x7(const std::uint8_t* source, uint64* census,
 			const std::uint8_t gray_center = source[i * width + j];
 
 			// 遍历大小为5x5的窗口内邻域像素，逐一比较像素值与中心像素值的的大小，计算census值
-			uint64 census_val = 0u;
+			std::uint64_t census_val = 0u;
 			for (std::int32_t r = -4; r <= 4; r++) {
 				for (std::int32_t c = -3; c <= 3; c++) {
 					census_val <<= 1;
@@ -99,8 +99,8 @@ std::uint8_t Hamming32(const std::uint32_t& x, const std::uint32_t& y) {
 	return static_cast<std::uint8_t>(dist);
 }
 
-std::uint8_t Hamming64(const uint64& x, const uint64& y) {
-	uint64 dist = 0, val = x ^ y;
+std::uint8_t Hamming64(const std::uint64_t& x, const std::uint64_t& y) {
+	std::uint64_t dist = 0, val = x ^ y;
 
 	// Count the number of set bits
 	while (val) {
