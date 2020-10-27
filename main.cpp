@@ -1,3 +1,21 @@
+/*
+ * =====================================================================================
+ *
+ *       Filename:  main.cpp
+ *
+ *    Description:  
+ *
+ *        Version:  1.0
+ *        Created:  10/27/2020 04:27:50 PM
+ *       Revision:  none
+ *       Compiler:  g++
+ *
+ *         Author:  yipeng
+ *   Organization:  
+ *
+ * =====================================================================================
+ */
+
 #include <cstdio>
 #include <cstdint>
 #include <iostream>
@@ -5,44 +23,48 @@
 #include <chrono>
 #include <memory>
 
-#include <opencv2/opencv.hpp>
+#include <glog/logging.h>
+#include <gflags/gflags.h>
+#include <opencv2/core.hpp>
+#include <opencv2/highgui.hpp>
+#include <opencv2/imgproc.hpp>
 
 #include "semi_global_matching.h"
 
-/**
- * \param argc argc[1]:×óÓ°ÏñÂ·¾¶ argc[2]: ÓÒÓ°ÏñÂ·¾¶ argc[3]: ×îĞ¡ÊÓ²î[¿ÉÑ¡£¬Ä¬ÈÏ0] argc[4]: ×î´óÊÓ²î[¿ÉÑ¡£¬Ä¬ÈÏ64]
- * \param eg. ..\Data\cone\im2.png ..\Data\cone\im6.png 0 64
- * \param eg. ..\Data\Reindeer\view1.png ..\Data\Reindeer\view5.png 0 128
- */
+DEFINE_string(left_image,    "data/cone/img0.png", "left image path");
+DEFINE_string(right_image,   "data/cone/img1.png", "right image path");
+DEFINE_int32(min_disp,       0,                    "min disparity");
+DEFINE_int32(max_disp,       64,                   "min disparity");
 
 int main(int argv, char* argc[]) {
-    if (argv < 3) {
-        std::cout << "²ÎÊı¹ıÉÙ£¬ÇëÖÁÉÙÖ¸¶¨×óÓÒÓ°ÏñÂ·¾¶£¡" << std::endl;
-        return -1;
-    }
+    google::ParseCommandLineFlags(&argc, &argv, true);
+    google::InitGoogleLogging(argv[0]);
+    google::SetLogDestination(google::GLOG_INFO, "log/");
+    FLAGS_stderrthreshold = google::GLOG_INFO;
+    FLAGS_colorlogtostderr = true;
 
-    // ¶ÁÈ¡×óÍ¼ÓÒÍ¼
-    std::string left_path = argc[1];
-    std::string right_path = argc[2];
+    // è¯»å–å·¦å›¾å³å›¾
+    std::string left_path = FLAGS_left_image;
+    std::string right_path = FLAGS_right_image;
 
     cv::Mat left_image = cv::imread(left_path, cv::IMREAD_COLOR);
     cv::Mat left_gray_image = cv::imread(left_path, cv::IMREAD_GRAYSCALE);
     cv::Mat right_gray_image = cv::imread(right_path, cv::IMREAD_GRAYSCALE);
 
     if (left_gray_image.data == nullptr || right_gray_image.data == nullptr) {
-        std::cout << "¶ÁÈ¡Í¼Æ¬Ê§°Ü£¡" << std::endl;
+        LOG(ERROR) << "è¯»å–å›¾ç‰‡å¤±è´¥ï¼";
         return -1;
     }
     if (left_gray_image.rows != right_gray_image.rows 
             || left_gray_image.cols != right_gray_image.cols) {
-        std::cout << "×óÓÒÍ¼Æ¬³ß´ç²»Ò»ÖÂ£¡" << std::endl;
+        LOG(ERROR) << "å·¦å³å›¾ç‰‡å°ºå¯¸ä¸ä¸€è‡´ï¼";
         return -1;
     }
 
     const std::int32_t height = static_cast<std::int32_t>(right_gray_image.rows);
     const std::int32_t width = static_cast<std::int32_t>(left_gray_image.cols);
 
-    // ×óÓÒÓ°ÏñµÄ»Ò¶ÈÊı¾İ
+    // å·¦å³å½±åƒçš„ç°åº¦æ•°æ®
     auto left_image_data = std::shared_ptr<std::uint8_t>(new std::uint8_t[width * height], [](std::uint8_t* data) { delete []data; });
     auto right_image_data = std::shared_ptr<std::uint8_t>(new std::uint8_t[width * height], [](std::uint8_t* data) { delete []data; });
     for (int i = 0; i < height; i++) {
@@ -52,96 +74,101 @@ int main(int argv, char* argc[]) {
         }
     }
 
-    // SGMÆ¥Åä²ÎÊıÉè¼Æ
+    // SGMåŒ¹é…å‚æ•°è®¾è®¡
     SemiGlobalMatching::SGMOption sgm_option;
-    // ¾ÛºÏÂ·¾¶Êı
+    // èšåˆè·¯å¾„æ•°
     sgm_option.num_paths = 8;
-    // ºòÑ¡ÊÓ²î·¶Î§
-    sgm_option.min_disparity = argv < 4 ? 0 : std::atoi(argc[3]);
-    sgm_option.max_disparity = argv < 5 ? 64 : std::atoi(argc[4]);
-    // census´°¿ÚÀàĞÍ
+    // å€™é€‰è§†å·®èŒƒå›´
+    sgm_option.min_disparity = FLAGS_min_disp;
+    sgm_option.max_disparity = FLAGS_max_disp;
+    // censusçª—å£ç±»å‹
     sgm_option.census_size = SemiGlobalMatching::Census5x5;
-    // Ò»ÖÂĞÔ¼ì²é
+    // ä¸€è‡´æ€§æ£€æŸ¥
     sgm_option.is_check_lr = true;
     sgm_option.lr_check_thresh = 1.0f;
-    // Î¨Ò»ĞÔÔ¼Êø
+    // å”¯ä¸€æ€§çº¦æŸ
     sgm_option.is_check_unique = true;
     sgm_option.uniqueness_ratio = 0.99;
-    // ÌŞ³ıĞ¡Á¬Í¨Çø
+    // å‰”é™¤å°è¿é€šåŒº
     sgm_option.is_remove_speckles = true;
     sgm_option.min_speckle_aera = 50;
-    // ³Í·£ÏîP1¡¢P2
+    // æƒ©ç½šé¡¹P1ã€P2
     sgm_option.p1 = 10;
     sgm_option.p2_init = 150;
-    // ÊÓ²îÍ¼Ìî³ä
-    // ÊÓ²îÍ¼Ìî³äµÄ½á¹û²¢²»¿É¿¿£¬Èô¹¤³Ì£¬²»½¨ÒéÌî³ä£¬Èô¿ÆÑĞ£¬Ôò¿ÉÌî³ä
+    // è§†å·®å›¾å¡«å……
+    // è§†å·®å›¾å¡«å……çš„ç»“æœå¹¶ä¸å¯é ï¼Œè‹¥å·¥ç¨‹ï¼Œä¸å»ºè®®å¡«å……ï¼Œè‹¥ç§‘ç ”ï¼Œåˆ™å¯å¡«å……
     sgm_option.is_fill_holes = false;
 
     printf("w = %d, h = %d, d = [%d,%d]\n\n", width, height, sgm_option.min_disparity, sgm_option.max_disparity);
+    LOG(INFO) << "h = " << height << ", w = " << width << ", " << "d = [" 
+              << sgm_option.min_disparity << ", " << sgm_option.max_disparity << "]\n"
 
-    // ¶¨ÒåSGMÆ¥ÅäÀàÊµÀı
-    SemiGlobalMatching sgm;
-    // ³õÊ¼»¯
-	printf("SGM Initializing...\n");
-    auto start = std::chrono::steady_clock::now();
-    if (!sgm.Initialize(width, height, sgm_option)) {
-        std::cout << "SGM³õÊ¼»¯Ê§°Ü£¡" << std::endl;
-        return -2;
-    }
-    auto end = std::chrono::steady_clock::now();
-    auto tt = duration_cast<std::chrono::milliseconds>(end - start);
-    printf("SGM Initializing Done! Timing : %lf s\n\n", tt.count() / 1000.0);
+    //// å®šä¹‰SGMåŒ¹é…ç±»å®ä¾‹
+    //SemiGlobalMatching sgm;
+    //// åˆå§‹åŒ–
+	//printf("SGM Initializing...\n");
+    //auto start = std::chrono::steady_clock::now();
+    //if (!sgm.Initialize(width, height, sgm_option)) {
+    //    LOG(ERROR) << "SGMåˆå§‹åŒ–å¤±è´¥ï¼" << std::endl;
+    //    return -2;
+    //}
+    //auto end = std::chrono::steady_clock::now();
+    //auto tt = duration_cast<std::chrono::milliseconds>(end - start);
+    //printf("SGM Initializing Done! Timing : %lf s\n\n", tt.count() / 1000.0);
 
-    // Æ¥Åä
-	printf("SGM Matching...\n");
-    start = std::chrono::steady_clock::now();
-    // disparityÊı×é±£´æ×ÓÏñËØµÄÊÓ²î½á¹û
-    auto disparity = std::shared_ptr<std::uint32_t>(new std::uint32_t[width * height], [](std::uint32_t* data) { delete []data; });
-    if (!sgm.Match(left_image_data, right_image_data, disparity)) {
-        std::cout << "SGMÆ¥ÅäÊ§°Ü£¡" << std::endl;
-        return -2;
-    }
-    end = std::chrono::steady_clock::now();
-    tt = duration_cast<std::chrono::milliseconds>(end - start);
-    printf("\nSGM Matching...Done! Timing :   %lf s\n", tt.count() / 1000.0);
+    //// åŒ¹é…
+	//printf("SGM Matching...\n");
+    //start = std::chrono::steady_clock::now();
+    //// disparityæ•°ç»„ä¿å­˜å­åƒç´ çš„è§†å·®ç»“æœ
+    //auto disparity = std::shared_ptr<std::uint32_t>(new std::uint32_t[width * height], [](std::uint32_t* data) { delete []data; });
+    //if (!sgm.Match(left_image_data, right_image_data, disparity)) {
+    //    LOG(ERROR) << "SGMåŒ¹é…å¤±è´¥ï¼" << std::endl;
+    //    return -2;
+    //}
+    //end = std::chrono::steady_clock::now();
+    //tt = duration_cast<std::chrono::milliseconds>(end - start);
+    //printf("\nSGM Matching...Done! Timing :   %lf s\n", tt.count() / 1000.0);
 
-	// ÏÔÊ¾ÊÓ²îÍ¼
-    // ×¢Òâ£¬¼ÆËãµãÔÆ²»ÄÜÓÃdisp_matµÄÊı¾İ£¬ËüÊÇÓÃÀ´ÏÔÊ¾ºÍ±£´æ½á¹ûÓÃµÄ¡£¼ÆËãµãÔÆÒªÓÃÉÏÃæµÄdisparityÊı×éÀïµÄÊı¾İ£¬ÊÇ×ÓÏñËØ¸¡µãÊı
-    cv::Mat disp_mat = cv::Mat(height, width, CV_8UC1);
-    float min_disp = width, max_disp = -width;
-    for (std::int32_t i = 0; i < height; i++) {
-        for (std::int32_t j = 0; j < width; j++) {
-            const float disp = disparity[i * width + j];
-            if (disp != Invalid_Float) {
-                min_disp = std::min(min_disp, disp);
-                max_disp = std::max(max_disp, disp);
-            }
-        }
-    }
-    for (std::int32_t i = 0; i < height; i++) {
-        for (std::int32_t j = 0; j < width; j++) {
-            const float disp = disparity[i * width + j];
-            if (disp == Invalid_Float) {
-                disp_mat.data[i * width + j] = 0;
-            }
-            else {
-                disp_mat.data[i * width + j] = static_cast<uchar>((disp - min_disp) / (max_disp - min_disp) * 255);
-            }
-        }
-    }
+	//// æ˜¾ç¤ºè§†å·®å›¾
+    //// æ³¨æ„ï¼Œè®¡ç®—ç‚¹äº‘ä¸èƒ½ç”¨disp_matçš„æ•°æ®ï¼Œå®ƒæ˜¯ç”¨æ¥æ˜¾ç¤ºå’Œä¿å­˜ç»“æœç”¨çš„ã€‚è®¡ç®—ç‚¹äº‘è¦ç”¨ä¸Šé¢çš„disparityæ•°ç»„é‡Œçš„æ•°æ®ï¼Œæ˜¯å­åƒç´ æµ®ç‚¹æ•°
+    //cv::Mat disp_mat = cv::Mat(height, width, CV_8UC1);
+    //float min_disp = width, max_disp = -width;
+    //for (std::int32_t i = 0; i < height; i++) {
+    //    for (std::int32_t j = 0; j < width; j++) {
+    //        const float disp = disparity[i * width + j];
+    //        if (disp != Invalid_Float) {
+    //            min_disp = std::min(min_disp, disp);
+    //            max_disp = std::max(max_disp, disp);
+    //        }
+    //    }
+    //}
+    //for (std::int32_t i = 0; i < height; i++) {
+    //    for (std::int32_t j = 0; j < width; j++) {
+    //        const float disp = disparity[i * width + j];
+    //        if (disp == Invalid_Float) {
+    //            disp_mat.data[i * width + j] = 0;
+    //        }
+    //        else {
+    //            disp_mat.data[i * width + j] = static_cast<uchar>((disp - min_disp) / (max_disp - min_disp) * 255);
+    //        }
+    //    }
+    //}
 
-    cv::imshow("ÊÓ²îÍ¼", disp_mat);
-    cv::Mat disp_color;
-    applyColorMap(disp_mat, disp_color, cv::COLORMAP_JET);
-    cv::imshow("ÊÓ²îÍ¼-Î±²Ê", disp_color);
+    //cv::imshow("è§†å·®å›¾", disp_mat);
+    //cv::Mat disp_color;
+    //applyColorMap(disp_mat, disp_color, cv::COLORMAP_JET);
+    //cv::imshow("è§†å·®å›¾-ä¼ªå½©", disp_color);
 
-    // ±£´æ½á¹û
-    std::string disp_map_path = argc[1]; disp_map_path += ".d.png";
-    std::string disp_color_map_path = argc[1]; disp_color_map_path += ".c.png";
-    cv::imwrite(disp_map_path, disp_mat);
-    cv::imwrite(disp_color_map_path, disp_color);
+    //// ä¿å­˜ç»“æœ
+    //std::string disp_map_path = argc[1]; disp_map_path += ".d.png";
+    //std::string disp_color_map_path = argc[1]; disp_color_map_path += ".c.png";
+    //cv::imwrite(disp_map_path, disp_mat);
+    //cv::imwrite(disp_color_map_path, disp_color);
 
-    cv::waitKey(0);
+    //cv::waitKey(0);
+
+    google::ShutDownCommandLineFlags();
+    google::ShutdownGoogleLogging();
 
     return 0;
 }

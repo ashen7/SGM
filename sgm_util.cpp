@@ -1,3 +1,21 @@
+/*
+ * =====================================================================================
+ *
+ *       Filename:  sgm_util.cpp
+ *
+ *    Description:  sgm utility
+ *
+ *        Version:  1.0
+ *        Created:  10/27/2020 04:31:47 PM
+ *       Revision:  none
+ *       Compiler:  g++
+ *
+ *         Author:  yipeng 
+ *   Organization:  
+ *
+ * =====================================================================================
+ */
+
 #include "sgm_util.h"
 
 #include <algorithm>
@@ -13,14 +31,14 @@ void census_transform_5x5(const std::uint8_t* source, std::uint32_t* census,
 		return;
 	}
 
-	// ÖğÏñËØ¼ÆËãcensusÖµ
+	// é€åƒç´ è®¡ç®—censuså€¼
 	for (std::int32_t i = 2; i < height - 2; i++) {
 		for (std::int32_t j = 2; j < width - 2; j++) {
 			
-			// ÖĞĞÄÏñËØÖµ
+			// ä¸­å¿ƒåƒç´ å€¼
 			const std::uint8_t gray_center = source[i * width + j];
 			
-			// ±éÀú´óĞ¡Îª5x5µÄ´°¿ÚÄÚÁÚÓòÏñËØ£¬ÖğÒ»±È½ÏÏñËØÖµÓëÖĞĞÄÏñËØÖµµÄµÄ´óĞ¡£¬¼ÆËãcensusÖµ
+			// éå†å¤§å°ä¸º5x5çš„çª—å£å†…é‚»åŸŸåƒç´ ï¼Œé€ä¸€æ¯”è¾ƒåƒç´ å€¼ä¸ä¸­å¿ƒåƒç´ å€¼çš„çš„å¤§å°ï¼Œè®¡ç®—censuså€¼
 			std::uint32_t census_val = 0u;
 			for (std::int32_t r = -2; r <= 2; r++) {
 				for (std::int32_t c = -2; c <= 2; c++) {
@@ -32,7 +50,7 @@ void census_transform_5x5(const std::uint8_t* source, std::uint32_t* census,
 				}
 			}
 
-			// ÖĞĞÄÏñËØµÄcensusÖµ
+			// ä¸­å¿ƒåƒç´ çš„censuså€¼
 			census[i * width + j] = census_val;		
 		}
 	}
@@ -44,14 +62,14 @@ void census_transform_9x7(const std::uint8_t* source, uint64* census,
 		return;
 	}
 
-	// ÖğÏñËØ¼ÆËãcensusÖµ
+	// é€åƒç´ è®¡ç®—censuså€¼
 	for (std::int32_t i = 4; i < height - 4; i++) {
 		for (std::int32_t j = 3; j < width - 3; j++) {
 
-			// ÖĞĞÄÏñËØÖµ
+			// ä¸­å¿ƒåƒç´ å€¼
 			const std::uint8_t gray_center = source[i * width + j];
 
-			// ±éÀú´óĞ¡Îª5x5µÄ´°¿ÚÄÚÁÚÓòÏñËØ£¬ÖğÒ»±È½ÏÏñËØÖµÓëÖĞĞÄÏñËØÖµµÄµÄ´óĞ¡£¬¼ÆËãcensusÖµ
+			// éå†å¤§å°ä¸º5x5çš„çª—å£å†…é‚»åŸŸåƒç´ ï¼Œé€ä¸€æ¯”è¾ƒåƒç´ å€¼ä¸ä¸­å¿ƒåƒç´ å€¼çš„çš„å¤§å°ï¼Œè®¡ç®—censuså€¼
 			uint64 census_val = 0u;
 			for (std::int32_t r = -4; r <= 4; r++) {
 				for (std::int32_t c = -3; c <= 3; c++) {
@@ -63,7 +81,7 @@ void census_transform_9x7(const std::uint8_t* source, uint64* census,
 				}
 			}
 
-			// ÖĞĞÄÏñËØµÄcensusÖµ
+			// ä¸­å¿ƒåƒç´ çš„censuså€¼
 			census[i * width + j] = census_val;
 		}
 	}
@@ -100,45 +118,45 @@ void CostAggregateLeftRight(const std::uint8_t* img_data, const std::int32_t& he
                             const std::uint8_t* cost_init, std::uint8_t* cost_aggr, bool is_forward) {
 	assert(width > 0 && height > 0 && max_disparity > min_disparity);
 
-	// ÊÓ²î·¶Î§
+	// è§†å·®èŒƒå›´
 	const std::int32_t disp_range = max_disparity - min_disparity;
 
 	// P1,P2
 	const auto& P1 = p1;
 	const auto& P2_Init = p2_init;
 
-	// ÕıÏò(×ó->ÓÒ) £ºis_forward = true ; direction = 1
-	// ·´Ïò(ÓÒ->×ó) £ºis_forward = false; direction = -1;
+	// æ­£å‘(å·¦->å³) ï¼šis_forward = true ; direction = 1
+	// åå‘(å³->å·¦) ï¼šis_forward = false; direction = -1;
 	const std::int32_t direction = is_forward ? 1 : -1;
 
-	// ¾ÛºÏ
+	// èšåˆ
 	for (std::int32_t i = 0u; i < height; i++) {
-		// Â·¾¶Í·ÎªÃ¿Ò»ĞĞµÄÊ×(Î²,dir=-1)ÁĞÏñËØ
+		// è·¯å¾„å¤´ä¸ºæ¯ä¸€è¡Œçš„é¦–(å°¾,dir=-1)åˆ—åƒç´ 
 		auto cost_init_row = (is_forward) ? (cost_init + i * width * disp_range) : (cost_init + i * width * disp_range + (width - 1) * disp_range);
 		auto cost_aggr_row = (is_forward) ? (cost_aggr + i * width * disp_range) : (cost_aggr + i * width * disp_range + (width - 1) * disp_range);
 		auto img_row = (is_forward) ? (img_data + i * width) : (img_data + i * width + width - 1);
 
-		// Â·¾¶ÉÏµ±Ç°»Ò¶ÈÖµºÍÉÏÒ»¸ö»Ò¶ÈÖµ
+		// è·¯å¾„ä¸Šå½“å‰ç°åº¦å€¼å’Œä¸Šä¸€ä¸ªç°åº¦å€¼
 		std::uint8_t gray = *img_row;
 		std::uint8_t gray_last = *img_row;
 
-		// Â·¾¶ÉÏÉÏ¸öÏñËØµÄ´ú¼ÛÊı×é£¬¶àÁ½¸öÔªËØÊÇÎªÁË±ÜÃâ±ß½çÒç³ö£¨Ê×Î²¸÷¶àÒ»¸ö£©
+		// è·¯å¾„ä¸Šä¸Šä¸ªåƒç´ çš„ä»£ä»·æ•°ç»„ï¼Œå¤šä¸¤ä¸ªå…ƒç´ æ˜¯ä¸ºäº†é¿å…è¾¹ç•Œæº¢å‡ºï¼ˆé¦–å°¾å„å¤šä¸€ä¸ªï¼‰
 		std::vector<std::uint8_t> cost_last_path(disp_range + 2, UINT8_MAX);
 
-		// ³õÊ¼»¯£ºµÚÒ»¸öÏñËØµÄ¾ÛºÏ´ú¼ÛÖµµÈÓÚ³õÊ¼´ú¼ÛÖµ
+		// åˆå§‹åŒ–ï¼šç¬¬ä¸€ä¸ªåƒç´ çš„èšåˆä»£ä»·å€¼ç­‰äºåˆå§‹ä»£ä»·å€¼
 		memcpy(cost_aggr_row, cost_init_row, disp_range * sizeof(std::uint8_t));
 		memcpy(&cost_last_path[1], cost_aggr_row, disp_range * sizeof(std::uint8_t));
 		cost_init_row += direction * disp_range;
 		cost_aggr_row += direction * disp_range;
 		img_row += direction;
 
-		// Â·¾¶ÉÏÉÏ¸öÏñËØµÄ×îĞ¡´ú¼ÛÖµ
+		// è·¯å¾„ä¸Šä¸Šä¸ªåƒç´ çš„æœ€å°ä»£ä»·å€¼
 		std::uint8_t mincost_last_path = UINT8_MAX;
 		for (auto cost : cost_last_path) {
 			mincost_last_path = std::min(mincost_last_path, cost);
 		}
 
-		// ×Ô·½ÏòÉÏµÚ2¸öÏñËØ¿ªÊ¼°´Ë³Ğò¾ÛºÏ
+		// è‡ªæ–¹å‘ä¸Šç¬¬2ä¸ªåƒç´ å¼€å§‹æŒ‰é¡ºåºèšåˆ
 		for (std::int32_t j = 0; j < width - 1; j++) {
 			gray = *img_row;
 			std::uint8_t min_cost = UINT8_MAX;
@@ -156,16 +174,16 @@ void CostAggregateLeftRight(const std::uint8_t* img_data, const std::int32_t& he
 				min_cost = std::min(min_cost, cost_s);
 			}
 
-			// ÖØÖÃÉÏ¸öÏñËØµÄ×îĞ¡´ú¼ÛÖµºÍ´ú¼ÛÊı×é
+			// é‡ç½®ä¸Šä¸ªåƒç´ çš„æœ€å°ä»£ä»·å€¼å’Œä»£ä»·æ•°ç»„
 			mincost_last_path = min_cost;
 			memcpy(&cost_last_path[1], cost_aggr_row, disp_range * sizeof(std::uint8_t));
 
-			// ÏÂÒ»¸öÏñËØ
+			// ä¸‹ä¸€ä¸ªåƒç´ 
 			cost_init_row += direction * disp_range;
 			cost_aggr_row += direction * disp_range;
 			img_row += direction;
 			
-			// ÏñËØÖµÖØĞÂ¸³Öµ
+			// åƒç´ å€¼é‡æ–°èµ‹å€¼
 			gray_last = gray;
 		}
 	}
@@ -177,45 +195,45 @@ void CostAggregateUpDown(const std::uint8_t* img_data, const std::int32_t& width
 	                     const std::uint8_t* cost_init, std::uint8_t* cost_aggr, bool is_forward) {
 	assert(width > 0 && height > 0 && max_disparity > min_disparity);
 
-	// ÊÓ²î·¶Î§
+	// è§†å·®èŒƒå›´
 	const std::int32_t disp_range = max_disparity - min_disparity;
 
 	// P1,P2
 	const auto& P1 = p1;
 	const auto& P2_Init = p2_init;
 
-	// ÕıÏò(ÉÏ->ÏÂ) £ºis_forward = true ; direction = 1
-	// ·´Ïò(ÏÂ->ÉÏ) £ºis_forward = false; direction = -1;
+	// æ­£å‘(ä¸Š->ä¸‹) ï¼šis_forward = true ; direction = 1
+	// åå‘(ä¸‹->ä¸Š) ï¼šis_forward = false; direction = -1;
 	const std::int32_t direction = is_forward ? 1 : -1;
 
-	// ¾ÛºÏ
+	// èšåˆ
 	for (std::int32_t j = 0; j < width; j++) {
-		// Â·¾¶Í·ÎªÃ¿Ò»ÁĞµÄÊ×(Î²,dir=-1)ĞĞÏñËØ
+		// è·¯å¾„å¤´ä¸ºæ¯ä¸€åˆ—çš„é¦–(å°¾,dir=-1)è¡Œåƒç´ 
 		auto cost_init_col = (is_forward) ? (cost_init + j * disp_range) : (cost_init + (height - 1) * width * disp_range + j * disp_range);
 		auto cost_aggr_col = (is_forward) ? (cost_aggr + j * disp_range) : (cost_aggr + (height - 1) * width * disp_range + j * disp_range);
 		auto img_col = (is_forward) ? (img_data + j) : (img_data + (height - 1) * width + j);
 
-		// Â·¾¶ÉÏµ±Ç°»Ò¶ÈÖµºÍÉÏÒ»¸ö»Ò¶ÈÖµ
+		// è·¯å¾„ä¸Šå½“å‰ç°åº¦å€¼å’Œä¸Šä¸€ä¸ªç°åº¦å€¼
 		std::uint8_t gray = *img_col;
 		std::uint8_t gray_last = *img_col;
 
-		// Â·¾¶ÉÏÉÏ¸öÏñËØµÄ´ú¼ÛÊı×é£¬¶àÁ½¸öÔªËØÊÇÎªÁË±ÜÃâ±ß½çÒç³ö£¨Ê×Î²¸÷¶àÒ»¸ö£©
+		// è·¯å¾„ä¸Šä¸Šä¸ªåƒç´ çš„ä»£ä»·æ•°ç»„ï¼Œå¤šä¸¤ä¸ªå…ƒç´ æ˜¯ä¸ºäº†é¿å…è¾¹ç•Œæº¢å‡ºï¼ˆé¦–å°¾å„å¤šä¸€ä¸ªï¼‰
 		std::vector<std::uint8_t> cost_last_path(disp_range + 2, UINT8_MAX);
 
-		// ³õÊ¼»¯£ºµÚÒ»¸öÏñËØµÄ¾ÛºÏ´ú¼ÛÖµµÈÓÚ³õÊ¼´ú¼ÛÖµ
+		// åˆå§‹åŒ–ï¼šç¬¬ä¸€ä¸ªåƒç´ çš„èšåˆä»£ä»·å€¼ç­‰äºåˆå§‹ä»£ä»·å€¼
 		memcpy(cost_aggr_col, cost_init_col, disp_range * sizeof(std::uint8_t));
 		memcpy(&cost_last_path[1], cost_aggr_col, disp_range * sizeof(std::uint8_t));
 		cost_init_col += direction * width * disp_range;
 		cost_aggr_col += direction * width * disp_range;
 		img_col += direction * width;
 
-		// Â·¾¶ÉÏÉÏ¸öÏñËØµÄ×îĞ¡´ú¼ÛÖµ
+		// è·¯å¾„ä¸Šä¸Šä¸ªåƒç´ çš„æœ€å°ä»£ä»·å€¼
 		std::uint8_t mincost_last_path = UINT8_MAX;
 		for (auto cost : cost_last_path) {
 			mincost_last_path = std::min(mincost_last_path, cost);
 		}
 
-		// ×Ô·½ÏòÉÏµÚ2¸öÏñËØ¿ªÊ¼°´Ë³Ğò¾ÛºÏ
+		// è‡ªæ–¹å‘ä¸Šç¬¬2ä¸ªåƒç´ å¼€å§‹æŒ‰é¡ºåºèšåˆ
 		for (std::int32_t i = 0; i < height - 1; i ++) {
 			gray = *img_col;
 			std::uint8_t min_cost = UINT8_MAX;
@@ -233,16 +251,16 @@ void CostAggregateUpDown(const std::uint8_t* img_data, const std::int32_t& width
 				min_cost = std::min(min_cost, cost_s);
 			}
 
-			// ÖØÖÃÉÏ¸öÏñËØµÄ×îĞ¡´ú¼ÛÖµºÍ´ú¼ÛÊı×é
+			// é‡ç½®ä¸Šä¸ªåƒç´ çš„æœ€å°ä»£ä»·å€¼å’Œä»£ä»·æ•°ç»„
 			mincost_last_path = min_cost;
 			memcpy(&cost_last_path[1], cost_aggr_col, disp_range * sizeof(std::uint8_t));
 
-			// ÏÂÒ»¸öÏñËØ
+			// ä¸‹ä¸€ä¸ªåƒç´ 
 			cost_init_col += direction * width * disp_range;
 			cost_aggr_col += direction * width * disp_range;
 			img_col += direction * width;
 
-			// ÏñËØÖµÖØĞÂ¸³Öµ
+			// åƒç´ å€¼é‡æ–°èµ‹å€¼
 			gray_last = gray;
 		}
 	}
@@ -254,53 +272,53 @@ void CostAggregateDagonal_1(const std::uint8_t* img_data, const std::int32_t& wi
 	                        const std::uint8_t* cost_init, std::uint8_t* cost_aggr, bool is_forward) {
 	assert(width > 1 && height > 1 && max_disparity > min_disparity);
 
-	// ÊÓ²î·¶Î§
+	// è§†å·®èŒƒå›´
 	const std::int32_t disp_range = max_disparity - min_disparity;
 
 	// P1,P2
 	const auto& P1 = p1;
 	const auto& P2_Init = p2_init;
 
-	// ÕıÏò(×óÉÏ->ÓÒÏÂ) £ºis_forward = true ; direction = 1
-	// ·´Ïò(ÓÒÏÂ->×óÉÏ) £ºis_forward = false; direction = -1;
+	// æ­£å‘(å·¦ä¸Š->å³ä¸‹) ï¼šis_forward = true ; direction = 1
+	// åå‘(å³ä¸‹->å·¦ä¸Š) ï¼šis_forward = false; direction = -1;
 	const std::int32_t direction = is_forward ? 1 : -1;
 
-	// ¾ÛºÏ
+	// èšåˆ
 
-	// ´æ´¢µ±Ç°µÄĞĞÁĞºÅ£¬ÅĞ¶ÏÊÇ·ñµ½´ïÓ°Ïñ±ß½ç
+	// å­˜å‚¨å½“å‰çš„è¡Œåˆ—å·ï¼Œåˆ¤æ–­æ˜¯å¦åˆ°è¾¾å½±åƒè¾¹ç•Œ
 	std::int32_t current_row = 0;
 	std::int32_t current_col = 0;
 
 	for (std::int32_t j = 0; j < width; j++) {
-		// Â·¾¶Í·ÎªÃ¿Ò»ÁĞµÄÊ×(Î²,dir=-1)ĞĞÏñËØ
+		// è·¯å¾„å¤´ä¸ºæ¯ä¸€åˆ—çš„é¦–(å°¾,dir=-1)è¡Œåƒç´ 
 		auto cost_init_col = (is_forward) ? (cost_init + j * disp_range) : (cost_init + (height - 1) * width * disp_range + j * disp_range);
 		auto cost_aggr_col = (is_forward) ? (cost_aggr + j * disp_range) : (cost_aggr + (height - 1) * width * disp_range + j * disp_range);
 		auto img_col = (is_forward) ? (img_data + j) : (img_data + (height - 1) * width + j);
 
-		// Â·¾¶ÉÏÉÏ¸öÏñËØµÄ´ú¼ÛÊı×é£¬¶àÁ½¸öÔªËØÊÇÎªÁË±ÜÃâ±ß½çÒç³ö£¨Ê×Î²¸÷¶àÒ»¸ö£©
+		// è·¯å¾„ä¸Šä¸Šä¸ªåƒç´ çš„ä»£ä»·æ•°ç»„ï¼Œå¤šä¸¤ä¸ªå…ƒç´ æ˜¯ä¸ºäº†é¿å…è¾¹ç•Œæº¢å‡ºï¼ˆé¦–å°¾å„å¤šä¸€ä¸ªï¼‰
 		std::vector<std::uint8_t> cost_last_path(disp_range + 2, UINT8_MAX);
 
-		// ³õÊ¼»¯£ºµÚÒ»¸öÏñËØµÄ¾ÛºÏ´ú¼ÛÖµµÈÓÚ³õÊ¼´ú¼ÛÖµ
+		// åˆå§‹åŒ–ï¼šç¬¬ä¸€ä¸ªåƒç´ çš„èšåˆä»£ä»·å€¼ç­‰äºåˆå§‹ä»£ä»·å€¼
 		memcpy(cost_aggr_col, cost_init_col, disp_range * sizeof(std::uint8_t));
 		memcpy(&cost_last_path[1], cost_aggr_col, disp_range * sizeof(std::uint8_t));
 
-		// Â·¾¶ÉÏµ±Ç°»Ò¶ÈÖµºÍÉÏÒ»¸ö»Ò¶ÈÖµ
+		// è·¯å¾„ä¸Šå½“å‰ç°åº¦å€¼å’Œä¸Šä¸€ä¸ªç°åº¦å€¼
 		std::uint8_t gray = *img_col;
 		std::uint8_t gray_last = *img_col;
 
-		// ¶Ô½ÇÏßÂ·¾¶ÉÏµÄÏÂÒ»¸öÏñËØ£¬ÖĞ¼ä¼ä¸ôwidth+1¸öÏñËØ
-		// ÕâÀïÒª¶àÒ»¸ö±ß½ç´¦Àí
-		// ÑØ¶Ô½ÇÏßÇ°½øµÄÊ±ºò»áÅöµ½Ó°ÏñÁĞ±ß½ç£¬²ßÂÔÊÇĞĞºÅ¼ÌĞø°´Ô­·½ÏòÇ°½ø£¬ÁĞºÅµ½Ìøµ½ÁíÒ»±ß½ç
+		// å¯¹è§’çº¿è·¯å¾„ä¸Šçš„ä¸‹ä¸€ä¸ªåƒç´ ï¼Œä¸­é—´é—´éš”width+1ä¸ªåƒç´ 
+		// è¿™é‡Œè¦å¤šä¸€ä¸ªè¾¹ç•Œå¤„ç†
+		// æ²¿å¯¹è§’çº¿å‰è¿›çš„æ—¶å€™ä¼šç¢°åˆ°å½±åƒåˆ—è¾¹ç•Œï¼Œç­–ç•¥æ˜¯è¡Œå·ç»§ç»­æŒ‰åŸæ–¹å‘å‰è¿›ï¼Œåˆ—å·åˆ°è·³åˆ°å¦ä¸€è¾¹ç•Œ
 		current_row = is_forward ? 0 : height - 1;
 		current_col = j;
 		if (is_forward && current_col == width - 1 && current_row < height - 1) {
-			// ×óÉÏ->ÓÒÏÂ£¬ÅöÓÒ±ß½ç
+			// å·¦ä¸Š->å³ä¸‹ï¼Œç¢°å³è¾¹ç•Œ
 			cost_init_col = cost_init + (current_row + direction) * width * disp_range;
 			cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range;
 			img_col = img_data + (current_row + direction) * width;
 		}
 		else if (!is_forward && current_col == 0 && current_row > 0) {
-			// ÓÒÏÂ->×óÉÏ£¬Åö×ó±ß½ç
+			// å³ä¸‹->å·¦ä¸Šï¼Œç¢°å·¦è¾¹ç•Œ
 			cost_init_col = cost_init + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 			cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 			img_col = img_data + (current_row + direction) * width + (width - 1);
@@ -311,13 +329,13 @@ void CostAggregateDagonal_1(const std::uint8_t* img_data, const std::int32_t& wi
 			img_col += direction * (width + 1);
 		}
 
-		// Â·¾¶ÉÏÉÏ¸öÏñËØµÄ×îĞ¡´ú¼ÛÖµ
+		// è·¯å¾„ä¸Šä¸Šä¸ªåƒç´ çš„æœ€å°ä»£ä»·å€¼
 		std::uint8_t mincost_last_path = UINT8_MAX;
 		for (auto cost : cost_last_path) {
 			mincost_last_path = std::min(mincost_last_path, cost);
 		}
 
-		// ×Ô·½ÏòÉÏµÚ2¸öÏñËØ¿ªÊ¼°´Ë³Ğò¾ÛºÏ
+		// è‡ªæ–¹å‘ä¸Šç¬¬2ä¸ªåƒç´ å¼€å§‹æŒ‰é¡ºåºèšåˆ
 		for (std::int32_t i = 0; i < height - 1; i ++) {
 			gray = *img_col;
 			std::uint8_t min_cost = UINT8_MAX;
@@ -335,25 +353,25 @@ void CostAggregateDagonal_1(const std::uint8_t* img_data, const std::int32_t& wi
 				min_cost = std::min(min_cost, cost_s);
 			}
 
-			// ÖØÖÃÉÏ¸öÏñËØµÄ×îĞ¡´ú¼ÛÖµºÍ´ú¼ÛÊı×é
+			// é‡ç½®ä¸Šä¸ªåƒç´ çš„æœ€å°ä»£ä»·å€¼å’Œä»£ä»·æ•°ç»„
 			mincost_last_path = min_cost;
 			memcpy(&cost_last_path[1], cost_aggr_col, disp_range * sizeof(std::uint8_t));
 
-			// µ±Ç°ÏñËØµÄĞĞÁĞºÅ
+			// å½“å‰åƒç´ çš„è¡Œåˆ—å·
 			current_row += direction;
 			current_col += direction;
 			
-			// ÏÂÒ»¸öÏñËØ,ÕâÀïÒª¶àÒ»¸ö±ß½ç´¦Àí
-			// ÕâÀïÒª¶àÒ»¸ö±ß½ç´¦Àí
-			// ÑØ¶Ô½ÇÏßÇ°½øµÄÊ±ºò»áÅöµ½Ó°ÏñÁĞ±ß½ç£¬²ßÂÔÊÇĞĞºÅ¼ÌĞø°´Ô­·½ÏòÇ°½ø£¬ÁĞºÅµ½Ìøµ½ÁíÒ»±ß½ç
+			// ä¸‹ä¸€ä¸ªåƒç´ ,è¿™é‡Œè¦å¤šä¸€ä¸ªè¾¹ç•Œå¤„ç†
+			// è¿™é‡Œè¦å¤šä¸€ä¸ªè¾¹ç•Œå¤„ç†
+			// æ²¿å¯¹è§’çº¿å‰è¿›çš„æ—¶å€™ä¼šç¢°åˆ°å½±åƒåˆ—è¾¹ç•Œï¼Œç­–ç•¥æ˜¯è¡Œå·ç»§ç»­æŒ‰åŸæ–¹å‘å‰è¿›ï¼Œåˆ—å·åˆ°è·³åˆ°å¦ä¸€è¾¹ç•Œ
 			if (is_forward && current_col == width - 1 && current_row < height - 1) {
-				// ×óÉÏ->ÓÒÏÂ£¬ÅöÓÒ±ß½ç
+				// å·¦ä¸Š->å³ä¸‹ï¼Œç¢°å³è¾¹ç•Œ
 				cost_init_col = cost_init + (current_row + direction) * width * disp_range;
 				cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range;
 				img_col = img_data + (current_row + direction) * width;
 			}
 			else if (!is_forward && current_col == 0 && current_row > 0) {
-				// ÓÒÏÂ->×óÉÏ£¬Åö×ó±ß½ç
+				// å³ä¸‹->å·¦ä¸Šï¼Œç¢°å·¦è¾¹ç•Œ
 				cost_init_col = cost_init + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 				cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 				img_col = img_data + (current_row + direction) * width + (width - 1);
@@ -364,7 +382,7 @@ void CostAggregateDagonal_1(const std::uint8_t* img_data, const std::int32_t& wi
 				img_col += direction * (width + 1);
 			}
 
-			// ÏñËØÖµÖØĞÂ¸³Öµ
+			// åƒç´ å€¼é‡æ–°èµ‹å€¼
 			gray_last = gray;
 		}
 	}
@@ -376,53 +394,53 @@ void CostAggregateDagonal_2(const std::uint8_t* img_data, const std::int32_t& wi
 	                        const std::uint8_t* cost_init, std::uint8_t* cost_aggr, bool is_forward) {
 	assert(width > 1 && height > 1 && max_disparity > min_disparity);
 
-	// ÊÓ²î·¶Î§
+	// è§†å·®èŒƒå›´
 	const std::int32_t disp_range = max_disparity - min_disparity;
 
 	// P1,P2
 	const auto& P1 = p1;
 	const auto& P2_Init = p2_init;
 
-	// ÕıÏò(ÓÒÉÏ->×óÏÂ) £ºis_forward = true ; direction = 1
-	// ·´Ïò(×óÏÂ->ÓÒÉÏ) £ºis_forward = false; direction = -1;
+	// æ­£å‘(å³ä¸Š->å·¦ä¸‹) ï¼šis_forward = true ; direction = 1
+	// åå‘(å·¦ä¸‹->å³ä¸Š) ï¼šis_forward = false; direction = -1;
 	const std::int32_t direction = is_forward ? 1 : -1;
 
-	// ¾ÛºÏ
+	// èšåˆ
 
-	// ´æ´¢µ±Ç°µÄĞĞÁĞºÅ£¬ÅĞ¶ÏÊÇ·ñµ½´ïÓ°Ïñ±ß½ç
+	// å­˜å‚¨å½“å‰çš„è¡Œåˆ—å·ï¼Œåˆ¤æ–­æ˜¯å¦åˆ°è¾¾å½±åƒè¾¹ç•Œ
 	std::int32_t current_row = 0;
 	std::int32_t current_col = 0;
 
 	for (std::int32_t j = 0; j < width; j++) {
-		// Â·¾¶Í·ÎªÃ¿Ò»ÁĞµÄÊ×(Î²,dir=-1)ĞĞÏñËØ
+		// è·¯å¾„å¤´ä¸ºæ¯ä¸€åˆ—çš„é¦–(å°¾,dir=-1)è¡Œåƒç´ 
 		auto cost_init_col = (is_forward) ? (cost_init + j * disp_range) : (cost_init + (height - 1) * width * disp_range + j * disp_range);
 		auto cost_aggr_col = (is_forward) ? (cost_aggr + j * disp_range) : (cost_aggr + (height - 1) * width * disp_range + j * disp_range);
 		auto img_col = (is_forward) ? (img_data + j) : (img_data + (height - 1) * width + j);
 
-		// Â·¾¶ÉÏÉÏ¸öÏñËØµÄ´ú¼ÛÊı×é£¬¶àÁ½¸öÔªËØÊÇÎªÁË±ÜÃâ±ß½çÒç³ö£¨Ê×Î²¸÷¶àÒ»¸ö£©
+		// è·¯å¾„ä¸Šä¸Šä¸ªåƒç´ çš„ä»£ä»·æ•°ç»„ï¼Œå¤šä¸¤ä¸ªå…ƒç´ æ˜¯ä¸ºäº†é¿å…è¾¹ç•Œæº¢å‡ºï¼ˆé¦–å°¾å„å¤šä¸€ä¸ªï¼‰
 		std::vector<std::uint8_t> cost_last_path(disp_range + 2, UINT8_MAX);
 
-		// ³õÊ¼»¯£ºµÚÒ»¸öÏñËØµÄ¾ÛºÏ´ú¼ÛÖµµÈÓÚ³õÊ¼´ú¼ÛÖµ
+		// åˆå§‹åŒ–ï¼šç¬¬ä¸€ä¸ªåƒç´ çš„èšåˆä»£ä»·å€¼ç­‰äºåˆå§‹ä»£ä»·å€¼
 		memcpy(cost_aggr_col, cost_init_col, disp_range * sizeof(std::uint8_t));
 		memcpy(&cost_last_path[1], cost_aggr_col, disp_range * sizeof(std::uint8_t));
 
-		// Â·¾¶ÉÏµ±Ç°»Ò¶ÈÖµºÍÉÏÒ»¸ö»Ò¶ÈÖµ
+		// è·¯å¾„ä¸Šå½“å‰ç°åº¦å€¼å’Œä¸Šä¸€ä¸ªç°åº¦å€¼
 		std::uint8_t gray = *img_col;
 		std::uint8_t gray_last = *img_col;
 
-		// ¶Ô½ÇÏßÂ·¾¶ÉÏµÄÏÂÒ»¸öÏñËØ£¬ÖĞ¼ä¼ä¸ôwidth-1¸öÏñËØ
-		// ÕâÀïÒª¶àÒ»¸ö±ß½ç´¦Àí
-		// ÑØ¶Ô½ÇÏßÇ°½øµÄÊ±ºò»áÅöµ½Ó°ÏñÁĞ±ß½ç£¬²ßÂÔÊÇĞĞºÅ¼ÌĞø°´Ô­·½ÏòÇ°½ø£¬ÁĞºÅµ½Ìøµ½ÁíÒ»±ß½ç
+		// å¯¹è§’çº¿è·¯å¾„ä¸Šçš„ä¸‹ä¸€ä¸ªåƒç´ ï¼Œä¸­é—´é—´éš”width-1ä¸ªåƒç´ 
+		// è¿™é‡Œè¦å¤šä¸€ä¸ªè¾¹ç•Œå¤„ç†
+		// æ²¿å¯¹è§’çº¿å‰è¿›çš„æ—¶å€™ä¼šç¢°åˆ°å½±åƒåˆ—è¾¹ç•Œï¼Œç­–ç•¥æ˜¯è¡Œå·ç»§ç»­æŒ‰åŸæ–¹å‘å‰è¿›ï¼Œåˆ—å·åˆ°è·³åˆ°å¦ä¸€è¾¹ç•Œ
 		current_row = is_forward ? 0 : height - 1;
 		current_col = j;
 		if (is_forward && current_col == 0 && current_row < height - 1) {
-			// ÓÒÉÏ->×óÏÂ£¬Åö×ó±ß½ç
+			// å³ä¸Š->å·¦ä¸‹ï¼Œç¢°å·¦è¾¹ç•Œ
 			cost_init_col = cost_init + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 			cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 			img_col = img_data + (current_row + direction) * width + (width - 1);
 		}
 		else if (!is_forward && current_col == width - 1 && current_row > 0) {
-			// ×óÏÂ->ÓÒÉÏ£¬ÅöÓÒ±ß½ç
+			// å·¦ä¸‹->å³ä¸Šï¼Œç¢°å³è¾¹ç•Œ
 			cost_init_col = cost_init + (current_row + direction) * width * disp_range ;
 			cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range;
 			img_col = img_data + (current_row + direction) * width;
@@ -433,13 +451,13 @@ void CostAggregateDagonal_2(const std::uint8_t* img_data, const std::int32_t& wi
 			img_col += direction * (width - 1);
 		}
 
-		// Â·¾¶ÉÏÉÏ¸öÏñËØµÄ×îĞ¡´ú¼ÛÖµ
+		// è·¯å¾„ä¸Šä¸Šä¸ªåƒç´ çš„æœ€å°ä»£ä»·å€¼
 		std::uint8_t mincost_last_path = UINT8_MAX;
 		for (auto cost : cost_last_path) {
 			mincost_last_path = std::min(mincost_last_path, cost);
 		}
 
-		// ×ÔÂ·¾¶ÉÏµÚ2¸öÏñËØ¿ªÊ¼°´Ë³Ğò¾ÛºÏ
+		// è‡ªè·¯å¾„ä¸Šç¬¬2ä¸ªåƒç´ å¼€å§‹æŒ‰é¡ºåºèšåˆ
 		for (std::int32_t i = 0; i < height - 1; i++) {
 			gray = *img_col;
 			std::uint8_t min_cost = UINT8_MAX;
@@ -457,25 +475,25 @@ void CostAggregateDagonal_2(const std::uint8_t* img_data, const std::int32_t& wi
 				min_cost = std::min(min_cost, cost_s);
 			}
 
-			// ÖØÖÃÉÏ¸öÏñËØµÄ×îĞ¡´ú¼ÛÖµºÍ´ú¼ÛÊı×é
+			// é‡ç½®ä¸Šä¸ªåƒç´ çš„æœ€å°ä»£ä»·å€¼å’Œä»£ä»·æ•°ç»„
 			mincost_last_path = min_cost;
 			memcpy(&cost_last_path[1], cost_aggr_col, disp_range * sizeof(std::uint8_t));
 
-			// µ±Ç°ÏñËØµÄĞĞÁĞºÅ
+			// å½“å‰åƒç´ çš„è¡Œåˆ—å·
 			current_row += direction;
 			current_col -= direction;
 
-			// ÏÂÒ»¸öÏñËØ,ÕâÀïÒª¶àÒ»¸ö±ß½ç´¦Àí
-			// ÕâÀïÒª¶àÒ»¸ö±ß½ç´¦Àí
-			// ÑØ¶Ô½ÇÏßÇ°½øµÄÊ±ºò»áÅöµ½Ó°ÏñÁĞ±ß½ç£¬²ßÂÔÊÇĞĞºÅ¼ÌĞø°´Ô­·½ÏòÇ°½ø£¬ÁĞºÅµ½Ìøµ½ÁíÒ»±ß½ç
+			// ä¸‹ä¸€ä¸ªåƒç´ ,è¿™é‡Œè¦å¤šä¸€ä¸ªè¾¹ç•Œå¤„ç†
+			// è¿™é‡Œè¦å¤šä¸€ä¸ªè¾¹ç•Œå¤„ç†
+			// æ²¿å¯¹è§’çº¿å‰è¿›çš„æ—¶å€™ä¼šç¢°åˆ°å½±åƒåˆ—è¾¹ç•Œï¼Œç­–ç•¥æ˜¯è¡Œå·ç»§ç»­æŒ‰åŸæ–¹å‘å‰è¿›ï¼Œåˆ—å·åˆ°è·³åˆ°å¦ä¸€è¾¹ç•Œ
 			if (is_forward && current_col == 0 && current_row < height - 1) {
-				// ÓÒÉÏ->×óÏÂ£¬Åö×ó±ß½ç
+				// å³ä¸Š->å·¦ä¸‹ï¼Œç¢°å·¦è¾¹ç•Œ
 				cost_init_col = cost_init + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 				cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range + (width - 1) * disp_range;
 				img_col = img_data + (current_row + direction) * width + (width - 1);
 			}
 			else if (!is_forward && current_col == width - 1 && current_row > 0) {
-				// ×óÏÂ->ÓÒÉÏ£¬ÅöÓÒ±ß½ç
+				// å·¦ä¸‹->å³ä¸Šï¼Œç¢°å³è¾¹ç•Œ
 				cost_init_col = cost_init + (current_row + direction) * width * disp_range;
 				cost_aggr_col = cost_aggr + (current_row + direction) * width * disp_range;
 				img_col = img_data + (current_row + direction) * width;
@@ -486,7 +504,7 @@ void CostAggregateDagonal_2(const std::uint8_t* img_data, const std::int32_t& wi
 				img_col += direction * (width - 1);
 			}
 
-			// ÏñËØÖµÖØĞÂ¸³Öµ
+			// åƒç´ å€¼é‡æ–°èµ‹å€¼
 			gray_last = gray;
 		}
 	}
@@ -498,7 +516,7 @@ void MedianFilter(const float* in, float* out,
 	const std::int32_t radius = wnd_size / 2;
 	const std::int32_t size = wnd_size * wnd_size;
 
-	// ´æ´¢¾Ö²¿´°¿ÚÄÚµÄÊı¾İ
+	// å­˜å‚¨å±€éƒ¨çª—å£å†…çš„æ•°æ®
 	std::vector<float> wnd_data;
 	wnd_data.reserve(size);
 
@@ -506,7 +524,7 @@ void MedianFilter(const float* in, float* out,
 		for (std::int32_t j = 0; j < width; j++) {
 			wnd_data.clear();
 
-			// »ñÈ¡¾Ö²¿´°¿ÚÊı¾İ
+			// è·å–å±€éƒ¨çª—å£æ•°æ®
 			for (std::int32_t r = -radius; r <= radius; r++) {
 				for (std::int32_t c = -radius; c <= radius; c++) {
 					const std::int32_t row = i + r;
@@ -517,9 +535,9 @@ void MedianFilter(const float* in, float* out,
 				}
 			}
 
-			// ÅÅĞò
+			// æ’åº
 			std::sort(wnd_data.begin(), wnd_data.end());
-			// È¡ÖĞÖµ
+			// å–ä¸­å€¼
 			out[i * width + j] = wnd_data[wnd_data.size() / 2];
 		}
 	}
@@ -532,30 +550,30 @@ void RemoveSpeckles(float* disparity_map, const std::int32_t& width, const std::
 		return;
 	}
 
-	// ¶¨Òå±ê¼ÇÏñËØÊÇ·ñ·ÃÎÊµÄÊı×é
+	// å®šä¹‰æ ‡è®°åƒç´ æ˜¯å¦è®¿é—®çš„æ•°ç»„
 	std::vector<bool> visited(std::uint32_t(width*height),false);
 	for(std::int32_t i=0;i<height;i++) {
 		for(std::int32_t j=0;j<width;j++) {
 			if (visited[i * width + j] || disparity_map[i*width+j] == invalid_val) {
-				// Ìø¹ıÒÑ·ÃÎÊµÄÏñËØ¼°ÎŞĞ§ÏñËØ
+				// è·³è¿‡å·²è®¿é—®çš„åƒç´ åŠæ— æ•ˆåƒç´ 
 				continue;
 			}
-			// ¹ã¶ÈÓÅÏÈ±éÀú£¬ÇøÓò¸ú×Ù
-			// °ÑÁ¬Í¨ÓòÃæ»ıĞ¡ÓÚãĞÖµµÄÇøÓòÊÓ²îÈ«ÉèÎªÎŞĞ§Öµ
+			// å¹¿åº¦ä¼˜å…ˆéå†ï¼ŒåŒºåŸŸè·Ÿè¸ª
+			// æŠŠè¿é€šåŸŸé¢ç§¯å°äºé˜ˆå€¼çš„åŒºåŸŸè§†å·®å…¨è®¾ä¸ºæ— æ•ˆå€¼
 			std::vector<std::pair<std::int32_t, std::int32_t>> vec;
 			vec.emplace_back(i, j);
 			visited[i * width + j] = true;
 			std::uint32_t cur = 0;
 			std::uint32_t next = 0;
 			do {
-				// ¹ã¶ÈÓÅÏÈ±éÀúÇøÓò¸ú×Ù	
+				// å¹¿åº¦ä¼˜å…ˆéå†åŒºåŸŸè·Ÿè¸ª	
 				next = vec.size();
 				for (std::uint32_t k = cur; k < next; k++) {
 					const auto& pixel = vec[k];
 					const std::int32_t row = pixel.first;
 					const std::int32_t col = pixel.second;
 					const auto& disp_base = disparity_map[row * width + col];
-					// 8ÁÚÓò±éÀú
+					// 8é‚»åŸŸéå†
 					for(int r=-1;r<=1;r++) {
 						for(int c=-1;c<=1;c++) {
 							if(r==0&&c==0) {
@@ -577,7 +595,7 @@ void RemoveSpeckles(float* disparity_map, const std::int32_t& width, const std::
 				cur = next;
 			} while (next < vec.size());
 
-			// °ÑÁ¬Í¨ÓòÃæ»ıĞ¡ÓÚãĞÖµµÄÇøÓòÊÓ²îÈ«ÉèÎªÎŞĞ§Öµ
+			// æŠŠè¿é€šåŸŸé¢ç§¯å°äºé˜ˆå€¼çš„åŒºåŸŸè§†å·®å…¨è®¾ä¸ºæ— æ•ˆå€¼
 			if(vec.size() < min_speckle_aera) {
 				for(auto& pix:vec) {
 					disparity_map[pix.first * width + pix.second] = invalid_val;
@@ -587,4 +605,5 @@ void RemoveSpeckles(float* disparity_map, const std::int32_t& width, const std::
 	}
 }
 
-}     // namespace sgm_util
+}   // namespace sgm_util
+

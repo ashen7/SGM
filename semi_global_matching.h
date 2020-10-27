@@ -1,3 +1,21 @@
+/*
+ * =====================================================================================
+ *
+ *       Filename:  semi_global_matching.h
+ *
+ *    Description:  
+ *
+ *        Version:  1.0
+ *        Created:  10/27/2020 04:30:07 PM
+ *       Revision:  none
+ *       Compiler:  g++
+ *
+ *         Author:  yipeng 
+ *   Organization:  
+ *
+ * =====================================================================================
+ */
+
 #pragma once
 #include <vector>
 
@@ -6,35 +24,35 @@ public:
 	SemiGlobalMatching();
 	~SemiGlobalMatching();
 
-	/** \brief Census´°¿Ú³ß´çÀàĞÍ */
+	/** \brief Censusçª—å£å°ºå¯¸ç±»å‹ */
 	enum CensusSize {
 		Census5x5 = 0,
 		Census9x7
 	};
 
-	/** \brief SGM²ÎÊı½á¹¹Ìå */
+	/** \brief SGMå‚æ•°ç»“æ„ä½“ */
 	struct SGMOption {
-		std::uint8_t	num_paths;			// ¾ÛºÏÂ·¾¶Êı 4 and 8
-		std::int32_t    min_disparity;		// ×îĞ¡ÊÓ²î
-		std::int32_t	max_disparity;		// ×î´óÊÓ²î
+		std::uint8_t	num_paths;			// èšåˆè·¯å¾„æ•° 4 and 8
+		std::int32_t    min_disparity;		// æœ€å°è§†å·®
+		std::int32_t	max_disparity;		// æœ€å¤§è§†å·®
 
-		CensusSize census_size;		// census´°¿Ú³ß´ç
+		CensusSize census_size;		// censusçª—å£å°ºå¯¸
 
-		bool	is_check_unique;	// ÊÇ·ñ¼ì²éÎ¨Ò»ĞÔ
-		float	uniqueness_ratio;	// Î¨Ò»ĞÔÔ¼ÊøãĞÖµ £¨×îĞ¡´ú¼Û-´Î×îĞ¡´ú¼Û)/×îĞ¡´ú¼Û > ãĞÖµ ÎªÓĞĞ§ÏñËØ
+		bool	is_check_unique;	// æ˜¯å¦æ£€æŸ¥å”¯ä¸€æ€§
+		float	uniqueness_ratio;	// å”¯ä¸€æ€§çº¦æŸé˜ˆå€¼ ï¼ˆæœ€å°ä»£ä»·-æ¬¡æœ€å°ä»£ä»·)/æœ€å°ä»£ä»· > é˜ˆå€¼ ä¸ºæœ‰æ•ˆåƒç´ 
 
-		bool	is_check_lr;		// ÊÇ·ñ¼ì²é×óÓÒÒ»ÖÂĞÔ
-		float	lr_check_thresh;	// ×óÓÒÒ»ÖÂĞÔÔ¼ÊøãĞÖµ
+		bool	is_check_lr;		// æ˜¯å¦æ£€æŸ¥å·¦å³ä¸€è‡´æ€§
+		float	lr_check_thresh;	// å·¦å³ä¸€è‡´æ€§çº¦æŸé˜ˆå€¼
 
-		bool	is_remove_speckles;	// ÊÇ·ñÒÆ³ıĞ¡µÄÁ¬Í¨Çø
-		int		min_speckle_aera;	// ×îĞ¡µÄÁ¬Í¨ÇøÃæ»ı£¨ÏñËØÊı£©
+		bool	is_remove_speckles;	// æ˜¯å¦ç§»é™¤å°çš„è¿é€šåŒº
+		int		min_speckle_aera;	// æœ€å°çš„è¿é€šåŒºé¢ç§¯ï¼ˆåƒç´ æ•°ï¼‰
 
-		bool	is_fill_holes;		// ÊÇ·ñÌî³äÊÓ²î¿Õ¶´
+		bool	is_fill_holes;		// æ˜¯å¦å¡«å……è§†å·®ç©ºæ´
 
 		// P1,P2 
 		// P2 = P2_init / (Ip-Iq)
-		std::int32_t  p1;			// ³Í·£Ïî²ÎÊıP1
-		std::int32_t  p2_init;		// ³Í·£Ïî²ÎÊıP2
+		std::int32_t  p1;			// æƒ©ç½šé¡¹å‚æ•°P1
+		std::int32_t  p2_init;		// æƒ©ç½šé¡¹å‚æ•°P2
 
 		SGMOption(): num_paths(8), min_disparity(0), max_disparity(64), census_size(Census5x5),
 		             is_check_unique(true), uniqueness_ratio(0.95f),
@@ -45,112 +63,113 @@ public:
 	};
 
 	/**
-	 * \brief ÀàµÄ³õÊ¼»¯£¬Íê³ÉÒ»Ğ©ÄÚ´æµÄÔ¤·ÖÅä¡¢²ÎÊıµÄÔ¤ÉèÖÃµÈ
-	 * \param height	ÊäÈë£¬ºËÏßÏñ¶ÔÓ°Ïñ¸ß
-	 * \param width		ÊäÈë£¬ºËÏßÏñ¶ÔÓ°Ïñ¿í
-	 * \param option	ÊäÈë£¬SemiGlobalMatching²ÎÊı
+	 * \brief ç±»çš„åˆå§‹åŒ–ï¼Œå®Œæˆä¸€äº›å†…å­˜çš„é¢„åˆ†é…ã€å‚æ•°çš„é¢„è®¾ç½®ç­‰
+	 * \param height	è¾“å…¥ï¼Œæ ¸çº¿åƒå¯¹å½±åƒé«˜
+	 * \param width		è¾“å…¥ï¼Œæ ¸çº¿åƒå¯¹å½±åƒå®½
+	 * \param option	è¾“å…¥ï¼ŒSemiGlobalMatchingå‚æ•°
 	 */
 	bool Initialize(const std::int32_t& height, const std::int32_t& width, const SGMOption& option);
 
 	/**
-	 * \brief Ö´ĞĞÆ¥Åä
-	 * \param img_left	ÊäÈë£¬×óÓ°ÏñÊı¾İÖ¸Õë 
-	 * \param img_right	ÊäÈë£¬ÓÒÓ°ÏñÊı¾İÖ¸Õë
-	 * \param disp_left	Êä³ö£¬×óÓ°ÏñÊÓ²îÍ¼Ö¸Õë£¬Ô¤ÏÈ·ÖÅäºÍÓ°ÏñµÈ³ß´çµÄÄÚ´æ¿Õ¼ä
+	 * \brief æ‰§è¡ŒåŒ¹é…
+	 * \param img_left	è¾“å…¥ï¼Œå·¦å½±åƒæ•°æ®æŒ‡é’ˆ 
+	 * \param img_right	è¾“å…¥ï¼Œå³å½±åƒæ•°æ®æŒ‡é’ˆ
+	 * \param disp_left	è¾“å‡ºï¼Œå·¦å½±åƒè§†å·®å›¾æŒ‡é’ˆï¼Œé¢„å…ˆåˆ†é…å’Œå½±åƒç­‰å°ºå¯¸çš„å†…å­˜ç©ºé—´
 	 */
 	bool Match(const std::uint8_t* img_left, const std::uint8_t* img_right, float* disp_left);
 
 	/**
-	 * \brief ÖØÉè
-	 * \param height	ÊäÈë£¬ºËÏßÏñ¶ÔÓ°Ïñ¸ß
-	 * \param width		ÊäÈë£¬ºËÏßÏñ¶ÔÓ°Ïñ¿í
-	 * \param option	ÊäÈë£¬SemiGlobalMatching²ÎÊı
+	 * \brief é‡è®¾
+	 * \param height	è¾“å…¥ï¼Œæ ¸çº¿åƒå¯¹å½±åƒé«˜
+	 * \param width		è¾“å…¥ï¼Œæ ¸çº¿åƒå¯¹å½±åƒå®½
+	 * \param option	è¾“å…¥ï¼ŒSemiGlobalMatchingå‚æ•°
 	 */
 	bool Reset(const std::uint32_t& height, const std::uint32_t& width, const SGMOption& option);
 
 private:
-	/** \brief Census±ä»» */
+	/** \brief Censuså˜æ¢ */
 	void CensusTransform() const;
 
-	/** \brief ´ú¼Û¼ÆËã	 */
+	/** \brief ä»£ä»·è®¡ç®—	 */
 	void ComputeCost() const;
 
-	/** \brief ´ú¼Û¾ÛºÏ	 */
+	/** \brief ä»£ä»·èšåˆ	 */
 	void CostAggregation() const;
 
-	/** \brief ÊÓ²î¼ÆËã	 */
+	/** \brief è§†å·®è®¡ç®—	 */
 	void ComputeDisparity() const;
 
-	/** \brief ÊÓ²î¼ÆËã	 */
+	/** \brief è§†å·®è®¡ç®—	 */
 	void ComputeDisparityRight() const;
 
-	/** \brief Ò»ÖÂĞÔ¼ì²é	 */
+	/** \brief ä¸€è‡´æ€§æ£€æŸ¥	 */
 	void LRCheck();
 
-	/** \brief ÊÓ²îÍ¼Ìî³ä */
+	/** \brief è§†å·®å›¾å¡«å…… */
 	void FillHolesInDispMap();
 
-	/** \brief ÄÚ´æÊÍ·Å	 */
+	/** \brief å†…å­˜é‡Šæ”¾	 */
 	void Release();
 
-	/** \brief SGM²ÎÊı	 */
+	/** \brief SGMå‚æ•°	 */
 	SGMOption option_;
 
-	/** \brief Ó°Ïñ¸ß	 */
+	/** \brief å½±åƒé«˜	 */
 	std::int32_t height_;
 
-	/** \brief Ó°Ïñ¿í	 */
+	/** \brief å½±åƒå®½	 */
 	std::int32_t width_;
 
-	/** \brief ×óÓ°ÏñÊı¾İ	 */
+	/** \brief å·¦å½±åƒæ•°æ®	 */
 	const std::uint8_t* left_image_;
 
-	/** \brief ÓÒÓ°ÏñÊı¾İ	 */
+	/** \brief å³å½±åƒæ•°æ®	 */
 	const std::uint8_t* right_image_;
 	
-	/** \brief ×óÓ°ÏñcensusÖµ	*/
+	/** \brief å·¦å½±åƒcensuså€¼	*/
 	void* left_census_;
 	
-	/** \brief ÓÒÓ°ÏñcensusÖµ	*/
+	/** \brief å³å½±åƒcensuså€¼	*/
 	void* right_census_;
 	
-	/** \brief ³õÊ¼Æ¥Åä´ú¼Û	*/
+	/** \brief åˆå§‹åŒ¹é…ä»£ä»·	*/
 	std::uint8_t* cost_init_;
 	
-	/** \brief ¾ÛºÏÆ¥Åä´ú¼Û	*/
-	uint16* cost_aggr_;
+	/** \brief èšåˆåŒ¹é…ä»£ä»·	*/
+    std::uint16_t* cost_aggr_;
 
-	// ¨K ¡ı ¨L   5  3  7
-	// ¡ú    ¡û	 1    2
-	// ¨J ¡ü ¨I   8  4  6
-	/** \brief ¾ÛºÏÆ¥Åä´ú¼Û-·½Ïò1	*/
+	// â†˜ â†“ â†™   5  3  7
+	// â†’    â†	 1    2
+	// â†— â†‘ â†–   8  4  6
+	/** \brief èšåˆåŒ¹é…ä»£ä»·-æ–¹å‘1	*/
 	std::uint8_t* cost_aggr_1_;
-	/** \brief ¾ÛºÏÆ¥Åä´ú¼Û-·½Ïò2	*/
+	/** \brief èšåˆåŒ¹é…ä»£ä»·-æ–¹å‘2	*/
 	std::uint8_t* cost_aggr_2_;
-	/** \brief ¾ÛºÏÆ¥Åä´ú¼Û-·½Ïò3	*/
+	/** \brief èšåˆåŒ¹é…ä»£ä»·-æ–¹å‘3	*/
 	std::uint8_t* cost_aggr_3_;
-	/** \brief ¾ÛºÏÆ¥Åä´ú¼Û-·½Ïò4	*/
+	/** \brief èšåˆåŒ¹é…ä»£ä»·-æ–¹å‘4	*/
 	std::uint8_t* cost_aggr_4_;
-	/** \brief ¾ÛºÏÆ¥Åä´ú¼Û-·½Ïò5	*/
+	/** \brief èšåˆåŒ¹é…ä»£ä»·-æ–¹å‘5	*/
 	std::uint8_t* cost_aggr_5_;
-	/** \brief ¾ÛºÏÆ¥Åä´ú¼Û-·½Ïò6	*/
+	/** \brief èšåˆåŒ¹é…ä»£ä»·-æ–¹å‘6	*/
 	std::uint8_t* cost_aggr_6_;
-	/** \brief ¾ÛºÏÆ¥Åä´ú¼Û-·½Ïò7	*/
+	/** \brief èšåˆåŒ¹é…ä»£ä»·-æ–¹å‘7	*/
 	std::uint8_t* cost_aggr_7_;
-	/** \brief ¾ÛºÏÆ¥Åä´ú¼Û-·½Ïò8	*/
+	/** \brief èšåˆåŒ¹é…ä»£ä»·-æ–¹å‘8	*/
 	std::uint8_t* cost_aggr_8_;
 
-	/** \brief ×óÓ°ÏñÊÓ²îÍ¼	*/
+	/** \brief å·¦å½±åƒè§†å·®å›¾	*/
 	float* left_disp_;
-	/** \brief ÓÒÓ°ÏñÊÓ²îÍ¼	*/
+	/** \brief å³å½±åƒè§†å·®å›¾	*/
 	float* right_disp_;
 
-	/** \brief ÊÇ·ñ³õÊ¼»¯±êÖ¾	*/
+	/** \brief æ˜¯å¦åˆå§‹åŒ–æ ‡å¿—	*/
 	bool is_initialized_;
 
-	/** \brief ÕÚµ²ÇøÏñËØ¼¯	*/
+	/** \brief é®æŒ¡åŒºåƒç´ é›†	*/
 	std::vector<std::pair<int, int>> occlusions_;
-	/** \brief ÎóÆ¥ÅäÇøÏñËØ¼¯	*/
+	/** \brief è¯¯åŒ¹é…åŒºåƒç´ é›†	*/
 	std::vector<std::pair<int, int>> mismatches_;
 };
+
 
