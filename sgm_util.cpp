@@ -18,30 +18,32 @@
 
 #include "sgm_util.h"
 
-#include <algorithm>
 #include <cassert>
+#include <cstdint>
+#include <cstddef>
+#include <cstring>
 #include <vector>
-#include <queue>
+#include <algorithm>
 
 namespace sgm_util {
 
 void census_transform_5x5(const std::uint8_t* source, std::uint32_t* census, 
-                          const std::int32_t& height, const std::int32_t& width) {
+                          const int& height, const int& width) {
 	if (source == nullptr || census == nullptr || width <= 5 || height <= 5) {
 		return;
 	}
 
 	// 逐像素计算census值
-	for (std::int32_t i = 2; i < height - 2; i++) {
-		for (std::int32_t j = 2; j < width - 2; j++) {
+	for (int i = 2; i < height - 2; i++) {
+		for (int j = 2; j < width - 2; j++) {
 			
 			// 中心像素值
 			const std::uint8_t gray_center = source[i * width + j];
 			
 			// 遍历大小为5x5的窗口内邻域像素，逐一比较像素值与中心像素值的的大小，计算census值
 			std::uint32_t census_val = 0u;
-			for (std::int32_t r = -2; r <= 2; r++) {
-				for (std::int32_t c = -2; c <= 2; c++) {
+			for (int r = -2; r <= 2; r++) {
+				for (int c = -2; c <= 2; c++) {
 					census_val <<= 1;
 					const std::uint8_t gray = source[(i + r) * width + j + c];
 					if (gray < gray_center) {
@@ -57,22 +59,22 @@ void census_transform_5x5(const std::uint8_t* source, std::uint32_t* census,
 }
 
 void census_transform_9x7(const std::uint8_t* source, std::uint64_t* census, 
-                          const std::int32_t& height, const std::int32_t& width) {
+                          const int& height, const int& width) {
 	if (source == nullptr || census == nullptr || width <= 9 || height <= 7) {
 		return;
 	}
 
 	// 逐像素计算census值
-	for (std::int32_t i = 4; i < height - 4; i++) {
-		for (std::int32_t j = 3; j < width - 3; j++) {
+	for (int i = 4; i < height - 4; i++) {
+		for (int j = 3; j < width - 3; j++) {
 
 			// 中心像素值
 			const std::uint8_t gray_center = source[i * width + j];
 
 			// 遍历大小为5x5的窗口内邻域像素，逐一比较像素值与中心像素值的的大小，计算census值
 			std::uint64_t census_val = 0u;
-			for (std::int32_t r = -4; r <= 4; r++) {
-				for (std::int32_t c = -3; c <= 3; c++) {
+			for (int r = -4; r <= 4; r++) {
+				for (int c = -3; c <= 3; c++) {
 					census_val <<= 1;
 					const std::uint8_t gray = source[(i + r) * width + j + c];
 					if (gray < gray_center) {
@@ -112,14 +114,14 @@ std::uint8_t Hamming64(const std::uint64_t& x, const std::uint64_t& y) {
 }
 
 
-void CostAggregateLeftRight(const std::uint8_t* img_data, const std::int32_t& height, const std::int32_t& width, 
-                            const std::int32_t& min_disparity, const std::int32_t& max_disparity,
-	                        const std::int32_t& p1, const std::int32_t& p2_init, 
+void CostAggregateLeftRight(const std::uint8_t* img_data, const int& height, const int& width, 
+                            const int& min_disparity, const int& max_disparity,
+	                        const int& p1, const int& p2_init, 
                             const std::uint8_t* cost_init, std::uint8_t* cost_aggr, bool is_forward) {
 	assert(width > 0 && height > 0 && max_disparity > min_disparity);
 
 	// 视差范围
-	const std::int32_t disp_range = max_disparity - min_disparity;
+	const int disp_range = max_disparity - min_disparity;
 
 	// P1,P2
 	const auto& P1 = p1;
@@ -127,10 +129,10 @@ void CostAggregateLeftRight(const std::uint8_t* img_data, const std::int32_t& he
 
 	// 正向(左->右) ：is_forward = true ; direction = 1
 	// 反向(右->左) ：is_forward = false; direction = -1;
-	const std::int32_t direction = is_forward ? 1 : -1;
+	const int direction = is_forward ? 1 : -1;
 
 	// 聚合
-	for (std::int32_t i = 0u; i < height; i++) {
+	for (int i = 0u; i < height; i++) {
 		// 路径头为每一行的首(尾,dir=-1)列像素
 		auto cost_init_row = (is_forward) ? (cost_init + i * width * disp_range) : (cost_init + i * width * disp_range + (width - 1) * disp_range);
 		auto cost_aggr_row = (is_forward) ? (cost_aggr + i * width * disp_range) : (cost_aggr + i * width * disp_range + (width - 1) * disp_range);
@@ -157,16 +159,16 @@ void CostAggregateLeftRight(const std::uint8_t* img_data, const std::int32_t& he
 		}
 
 		// 自方向上第2个像素开始按顺序聚合
-		for (std::int32_t j = 0; j < width - 1; j++) {
+		for (int j = 0; j < width - 1; j++) {
 			gray = *img_row;
 			std::uint8_t min_cost = UINT8_MAX;
-			for (std::int32_t d = 0; d < disp_range; d++){
+			for (int d = 0; d < disp_range; d++){
 				// Lr(p,d) = C(p,d) + min( Lr(p-r,d), Lr(p-r,d-1) + P1, Lr(p-r,d+1) + P1, min(Lr(p-r))+P2 ) - min(Lr(p-r))
 				const std::uint8_t  cost = cost_init_row[d];
-				const uint16 l1 = cost_last_path[d + 1];
-				const uint16 l2 = cost_last_path[d] + P1;
-				const uint16 l3 = cost_last_path[d + 2] + P1;
-				const uint16 l4 = mincost_last_path + std::max(P1, P2_Init / (abs(gray - gray_last) + 1));
+				const std::uint16_t l1 = cost_last_path[d + 1];
+				const std::uint16_t l2 = cost_last_path[d] + P1;
+				const std::uint16_t l3 = cost_last_path[d + 2] + P1;
+				const std::uint16_t l4 = mincost_last_path + std::max(P1, P2_Init / (abs(gray - gray_last) + 1));
 				
 				const std::uint8_t cost_s = cost + static_cast<std::uint8_t>(std::min(std::min(l1, l2), std::min(l3, l4)) - mincost_last_path);
 				
@@ -189,14 +191,14 @@ void CostAggregateLeftRight(const std::uint8_t* img_data, const std::int32_t& he
 	}
 }
 
-void CostAggregateUpDown(const std::uint8_t* img_data, const std::int32_t& width, const std::int32_t& height,
-	                     const std::int32_t& min_disparity, const std::int32_t& max_disparity, 
-                         const std::int32_t& p1, const std::int32_t& p2_init,
+void CostAggregateUpDown(const std::uint8_t* img_data, const int& height, const int& width,
+	                     const int& min_disparity, const int& max_disparity, 
+                         const int& p1, const int& p2_init,
 	                     const std::uint8_t* cost_init, std::uint8_t* cost_aggr, bool is_forward) {
 	assert(width > 0 && height > 0 && max_disparity > min_disparity);
 
 	// 视差范围
-	const std::int32_t disp_range = max_disparity - min_disparity;
+	const int disp_range = max_disparity - min_disparity;
 
 	// P1,P2
 	const auto& P1 = p1;
@@ -204,10 +206,10 @@ void CostAggregateUpDown(const std::uint8_t* img_data, const std::int32_t& width
 
 	// 正向(上->下) ：is_forward = true ; direction = 1
 	// 反向(下->上) ：is_forward = false; direction = -1;
-	const std::int32_t direction = is_forward ? 1 : -1;
+	const int direction = is_forward ? 1 : -1;
 
 	// 聚合
-	for (std::int32_t j = 0; j < width; j++) {
+	for (int j = 0; j < width; j++) {
 		// 路径头为每一列的首(尾,dir=-1)行像素
 		auto cost_init_col = (is_forward) ? (cost_init + j * disp_range) : (cost_init + (height - 1) * width * disp_range + j * disp_range);
 		auto cost_aggr_col = (is_forward) ? (cost_aggr + j * disp_range) : (cost_aggr + (height - 1) * width * disp_range + j * disp_range);
@@ -234,16 +236,16 @@ void CostAggregateUpDown(const std::uint8_t* img_data, const std::int32_t& width
 		}
 
 		// 自方向上第2个像素开始按顺序聚合
-		for (std::int32_t i = 0; i < height - 1; i ++) {
+		for (int i = 0; i < height - 1; i ++) {
 			gray = *img_col;
 			std::uint8_t min_cost = UINT8_MAX;
-			for (std::int32_t d = 0; d < disp_range; d++) {
+			for (int d = 0; d < disp_range; d++) {
 				// Lr(p,d) = C(p,d) + min( Lr(p-r,d), Lr(p-r,d-1) + P1, Lr(p-r,d+1) + P1, min(Lr(p-r))+P2 ) - min(Lr(p-r))
 				const std::uint8_t  cost = cost_init_col[d];
-				const uint16 l1 = cost_last_path[d + 1];
-				const uint16 l2 = cost_last_path[d] + P1;
-				const uint16 l3 = cost_last_path[d + 2] + P1;
-				const uint16 l4 = mincost_last_path + std::max(P1, P2_Init / (abs(gray - gray_last) + 1));
+				const std::uint16_t l1 = cost_last_path[d + 1];
+				const std::uint16_t l2 = cost_last_path[d] + P1;
+				const std::uint16_t l3 = cost_last_path[d + 2] + P1;
+				const std::uint16_t l4 = mincost_last_path + std::max(P1, P2_Init / (abs(gray - gray_last) + 1));
 
 				const std::uint8_t cost_s = cost + static_cast<std::uint8_t>(std::min(std::min(l1, l2), std::min(l3, l4)) - mincost_last_path);
 
@@ -266,14 +268,14 @@ void CostAggregateUpDown(const std::uint8_t* img_data, const std::int32_t& width
 	}
 }
 
-void CostAggregateDagonal_1(const std::uint8_t* img_data, const std::int32_t& width, const std::int32_t& height,
-	                        const std::int32_t& min_disparity, const std::int32_t& max_disparity, 
-                            const std::int32_t& p1, const std::int32_t& p2_init,
+void CostAggregateDagonal_1(const std::uint8_t* img_data, const int& height, const int& width,
+	                        const int& min_disparity, const int& max_disparity, 
+                            const int& p1, const int& p2_init,
 	                        const std::uint8_t* cost_init, std::uint8_t* cost_aggr, bool is_forward) {
 	assert(width > 1 && height > 1 && max_disparity > min_disparity);
 
 	// 视差范围
-	const std::int32_t disp_range = max_disparity - min_disparity;
+	const int disp_range = max_disparity - min_disparity;
 
 	// P1,P2
 	const auto& P1 = p1;
@@ -281,15 +283,15 @@ void CostAggregateDagonal_1(const std::uint8_t* img_data, const std::int32_t& wi
 
 	// 正向(左上->右下) ：is_forward = true ; direction = 1
 	// 反向(右下->左上) ：is_forward = false; direction = -1;
-	const std::int32_t direction = is_forward ? 1 : -1;
+	const int direction = is_forward ? 1 : -1;
 
 	// 聚合
 
 	// 存储当前的行列号，判断是否到达影像边界
-	std::int32_t current_row = 0;
-	std::int32_t current_col = 0;
+	int current_row = 0;
+	int current_col = 0;
 
-	for (std::int32_t j = 0; j < width; j++) {
+	for (int j = 0; j < width; j++) {
 		// 路径头为每一列的首(尾,dir=-1)行像素
 		auto cost_init_col = (is_forward) ? (cost_init + j * disp_range) : (cost_init + (height - 1) * width * disp_range + j * disp_range);
 		auto cost_aggr_col = (is_forward) ? (cost_aggr + j * disp_range) : (cost_aggr + (height - 1) * width * disp_range + j * disp_range);
@@ -336,16 +338,16 @@ void CostAggregateDagonal_1(const std::uint8_t* img_data, const std::int32_t& wi
 		}
 
 		// 自方向上第2个像素开始按顺序聚合
-		for (std::int32_t i = 0; i < height - 1; i ++) {
+		for (int i = 0; i < height - 1; i ++) {
 			gray = *img_col;
 			std::uint8_t min_cost = UINT8_MAX;
-			for (std::int32_t d = 0; d < disp_range; d++) {
+			for (int d = 0; d < disp_range; d++) {
 				// Lr(p,d) = C(p,d) + min( Lr(p-r,d), Lr(p-r,d-1) + P1, Lr(p-r,d+1) + P1, min(Lr(p-r))+P2 ) - min(Lr(p-r))
 				const std::uint8_t  cost = cost_init_col[d];
-				const uint16 l1 = cost_last_path[d + 1];
-				const uint16 l2 = cost_last_path[d] + P1;
-				const uint16 l3 = cost_last_path[d + 2] + P1;
-				const uint16 l4 = mincost_last_path + std::max(P1, P2_Init / (abs(gray - gray_last) + 1));
+				const std::uint16_t l1 = cost_last_path[d + 1];
+				const std::uint16_t l2 = cost_last_path[d] + P1;
+				const std::uint16_t l3 = cost_last_path[d + 2] + P1;
+				const std::uint16_t l4 = mincost_last_path + std::max(P1, P2_Init / (abs(gray - gray_last) + 1));
 
 				const std::uint8_t cost_s = cost + static_cast<std::uint8_t>(std::min(std::min(l1, l2), std::min(l3, l4)) - mincost_last_path);
 
@@ -388,14 +390,14 @@ void CostAggregateDagonal_1(const std::uint8_t* img_data, const std::int32_t& wi
 	}
 }
 
-void CostAggregateDagonal_2(const std::uint8_t* img_data, const std::int32_t& width, const std::int32_t& height,
-	                        const std::int32_t& min_disparity, const std::int32_t& max_disparity, 
-                            const std::int32_t& p1, const std::int32_t& p2_init,
+void CostAggregateDagonal_2(const std::uint8_t* img_data, const int& height, const int& width,
+	                        const int& min_disparity, const int& max_disparity, 
+                            const int& p1, const int& p2_init,
 	                        const std::uint8_t* cost_init, std::uint8_t* cost_aggr, bool is_forward) {
 	assert(width > 1 && height > 1 && max_disparity > min_disparity);
 
 	// 视差范围
-	const std::int32_t disp_range = max_disparity - min_disparity;
+	const int disp_range = max_disparity - min_disparity;
 
 	// P1,P2
 	const auto& P1 = p1;
@@ -403,15 +405,15 @@ void CostAggregateDagonal_2(const std::uint8_t* img_data, const std::int32_t& wi
 
 	// 正向(右上->左下) ：is_forward = true ; direction = 1
 	// 反向(左下->右上) ：is_forward = false; direction = -1;
-	const std::int32_t direction = is_forward ? 1 : -1;
+	const int direction = is_forward ? 1 : -1;
 
 	// 聚合
 
 	// 存储当前的行列号，判断是否到达影像边界
-	std::int32_t current_row = 0;
-	std::int32_t current_col = 0;
+	int current_row = 0;
+	int current_col = 0;
 
-	for (std::int32_t j = 0; j < width; j++) {
+	for (int j = 0; j < width; j++) {
 		// 路径头为每一列的首(尾,dir=-1)行像素
 		auto cost_init_col = (is_forward) ? (cost_init + j * disp_range) : (cost_init + (height - 1) * width * disp_range + j * disp_range);
 		auto cost_aggr_col = (is_forward) ? (cost_aggr + j * disp_range) : (cost_aggr + (height - 1) * width * disp_range + j * disp_range);
@@ -458,16 +460,16 @@ void CostAggregateDagonal_2(const std::uint8_t* img_data, const std::int32_t& wi
 		}
 
 		// 自路径上第2个像素开始按顺序聚合
-		for (std::int32_t i = 0; i < height - 1; i++) {
+		for (int i = 0; i < height - 1; i++) {
 			gray = *img_col;
 			std::uint8_t min_cost = UINT8_MAX;
-			for (std::int32_t d = 0; d < disp_range; d++) {
+			for (int d = 0; d < disp_range; d++) {
 				// Lr(p,d) = C(p,d) + min( Lr(p-r,d), Lr(p-r,d-1) + P1, Lr(p-r,d+1) + P1, min(Lr(p-r))+P2 ) - min(Lr(p-r))
 				const std::uint8_t  cost = cost_init_col[d];
-				const uint16 l1 = cost_last_path[d + 1];
-				const uint16 l2 = cost_last_path[d] + P1;
-				const uint16 l3 = cost_last_path[d + 2] + P1;
-				const uint16 l4 = mincost_last_path + std::max(P1, P2_Init / (abs(gray - gray_last) + 1));
+				const std::uint16_t l1 = cost_last_path[d + 1];
+				const std::uint16_t l2 = cost_last_path[d] + P1;
+				const std::uint16_t l3 = cost_last_path[d + 2] + P1;
+				const std::uint16_t l4 = mincost_last_path + std::max(P1, P2_Init / (abs(gray - gray_last) + 1));
 
 				const std::uint8_t cost_s = cost + static_cast<std::uint8_t>(std::min(std::min(l1, l2), std::min(l3, l4)) - mincost_last_path);
 
@@ -510,25 +512,24 @@ void CostAggregateDagonal_2(const std::uint8_t* img_data, const std::int32_t& wi
 	}
 }
 
-void MedianFilter(const float* in, float* out, 
-                  const std::int32_t& width, const std::int32_t& height,
-	              const std::int32_t wnd_size) {
-	const std::int32_t radius = wnd_size / 2;
-	const std::int32_t size = wnd_size * wnd_size;
+void MedianFilter(const float* in, float* out, const int& height, 
+                  const int& width, const int wnd_size) {
+	const int radius = wnd_size / 2;
+	const int size = wnd_size * wnd_size;
 
 	// 存储局部窗口内的数据
 	std::vector<float> wnd_data;
 	wnd_data.reserve(size);
 
-	for (std::int32_t i = 0; i < height; i++) {
-		for (std::int32_t j = 0; j < width; j++) {
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
 			wnd_data.clear();
 
 			// 获取局部窗口数据
-			for (std::int32_t r = -radius; r <= radius; r++) {
-				for (std::int32_t c = -radius; c <= radius; c++) {
-					const std::int32_t row = i + r;
-					const std::int32_t col = j + c;
+			for (int r = -radius; r <= radius; r++) {
+				for (int c = -radius; c <= radius; c++) {
+					const int row = i + r;
+					const int col = j + c;
 					if (row >= 0 && row < height && col >= 0 && col < width) {
 						wnd_data.push_back(in[row * width + col]);
 					}
@@ -543,8 +544,8 @@ void MedianFilter(const float* in, float* out,
 	}
 }
 
-void RemoveSpeckles(float* disparity_map, const std::int32_t& width, const std::int32_t& height,
-	                const std::int32_t& diff_insame, const std::uint32_t& min_speckle_aera, const float& invalid_val) {
+void RemoveSpeckles(float* disparity_map, const int& height, const int& width,
+	                const int& diff_insame, const std::uint32_t& min_speckle_aera, const float& invalid_val) {
 	assert(width > 0 && height > 0);
 	if (width < 0 || height < 0) {
 		return;
@@ -552,15 +553,15 @@ void RemoveSpeckles(float* disparity_map, const std::int32_t& width, const std::
 
 	// 定义标记像素是否访问的数组
 	std::vector<bool> visited(std::uint32_t(width*height),false);
-	for(std::int32_t i=0;i<height;i++) {
-		for(std::int32_t j=0;j<width;j++) {
+	for(int i=0;i<height;i++) {
+		for(int j=0;j<width;j++) {
 			if (visited[i * width + j] || disparity_map[i*width+j] == invalid_val) {
 				// 跳过已访问的像素及无效像素
 				continue;
 			}
 			// 广度优先遍历，区域跟踪
 			// 把连通域面积小于阈值的区域视差全设为无效值
-			std::vector<std::pair<std::int32_t, std::int32_t>> vec;
+			std::vector<std::pair<int, int>> vec;
 			vec.emplace_back(i, j);
 			visited[i * width + j] = true;
 			std::uint32_t cur = 0;
@@ -570,8 +571,8 @@ void RemoveSpeckles(float* disparity_map, const std::int32_t& width, const std::
 				next = vec.size();
 				for (std::uint32_t k = cur; k < next; k++) {
 					const auto& pixel = vec[k];
-					const std::int32_t row = pixel.first;
-					const std::int32_t col = pixel.second;
+					const int row = pixel.first;
+					const int col = pixel.second;
 					const auto& disp_base = disparity_map[row * width + col];
 					// 8邻域遍历
 					for(int r=-1;r<=1;r++) {

@@ -35,8 +35,8 @@ public:
 	/** \brief SGM参数结构体 */
 	struct SGMOption {
 		std::uint8_t	num_paths;			// 聚合路径数 4 and 8
-		std::int32_t    min_disparity;		// 最小视差
-		std::int32_t	max_disparity;		// 最大视差
+		int    min_disparity;		// 最小视差
+		int	max_disparity;		// 最大视差
 
 		CensusSize census_size;		// census窗口尺寸
 
@@ -53,8 +53,8 @@ public:
 
 		// P1,P2 
 		// P2 = P2_init / (Ip-Iq)
-		std::int32_t  p1;			// 惩罚项参数P1
-		std::int32_t  p2_init;		// 惩罚项参数P2
+		int  p1;			// 惩罚项参数P1
+		int  p2_init;		// 惩罚项参数P2
 
 		SGMOption(): num_paths(8), min_disparity(0), max_disparity(64), census_size(Census5x5),
 		             is_check_unique(true), uniqueness_ratio(0.95f),
@@ -71,7 +71,7 @@ public:
 	 * \param width		输入，核线像对影像宽
 	 * \param option	输入，SemiGlobalMatching参数
 	 */
-	bool Initialize(const std::int32_t& height, const std::int32_t& width, const SGMOption& option);
+	bool Initialize(const int& height, const int& width, const SGMOption& option);
 
 	/**
 	 * \brief 执行匹配
@@ -119,10 +119,10 @@ private:
 	SGMOption option_;
 
 	/** \brief 影像高	 */
-	std::int32_t height_;
+	int height_;
 
 	/** \brief 影像宽	 */
-	std::int32_t width_;
+	int width_;
 
 	/** \brief 左影像数据	 */
 	const std::uint8_t* left_image_;

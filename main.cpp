@@ -21,6 +21,7 @@
 #include <iostream>
 #include <vector>
 #include <chrono>
+#include <numeric>
 #include <memory>
 
 #include <glog/logging.h>
@@ -31,10 +32,13 @@
 
 #include "semi_global_matching.h"
 
-DEFINE_string(left_image,    "data/cone/img0.png", "left image path");
-DEFINE_string(right_image,   "data/cone/img1.png", "right image path");
-DEFINE_int32(min_disp,       0,                    "min disparity");
-DEFINE_int32(max_disp,       64,                   "min disparity");
+DEFINE_string(left_image,           "data/cone/img0.png",   "left image path");
+DEFINE_string(right_image,          "data/cone/img1.png",   "right image path");
+DEFINE_string(disp_map_save_path,   "results/disp_map.png", "disparity map save path");
+DEFINE_int32(min_disp,              0,                      "min disparity");
+DEFINE_int32(max_disp,              64,                     "min disparity");
+
+constexpr auto Invalid_Float = std::numeric_limits<float>::infinity();
 
 int main(int argc, char* argv[]) {
     google::ParseCommandLineFlags(&argc, &argv, true);
@@ -61,9 +65,9 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
-    const std::int32_t height = static_cast<std::int32_t>(left_gray_image.rows);
-    const std::int32_t width = static_cast<std::int32_t>(left_gray_image.cols);
-    const std::int32_t image_size = height * width;
+    const int height = static_cast<int>(left_gray_image.rows);
+    const int width = static_cast<int>(left_gray_image.cols);
+    const int image_size = height * width;
 
     // 左右影像的灰度数据
     auto left_image_data = std::shared_ptr<std::uint8_t>(new std::uint8_t[image_size], 
@@ -102,7 +106,7 @@ int main(int argc, char* argv[]) {
     // 视差图填充的结果并不可靠，若工程，不建议填充，若科研，则可填充
     sgm_option.is_fill_holes = false;
 
-    LOG(INFO) << "h = " << height << ", w = " << width << ", " << "d = [" 
+    LOG(INFO) << "w = " << width << ", h = " << height << ", " << "d = [" 
               << sgm_option.min_disparity << ", " << sgm_option.max_disparity << "]\n";
 
     // 定义SGM匹配类实例
@@ -122,53 +126,51 @@ int main(int argc, char* argv[]) {
 	LOG(INFO) << "SGM Matching...";
     start = std::chrono::steady_clock::now();
     // disparity数组保存子像素的视差结果
-    auto disparity = std::shared_ptr<float>(new std::float[image_size], 
-                                            [](std::float* data) { delete []data; });
-    if (!sgm.Match(left_image_data, right_image_data, disparity)) {
+    auto disparity = std::shared_ptr<float>(new float[image_size], [](float* data) { delete []data; });
+    if (!sgm.Match(left_image_data.get(), right_image_data.get(), disparity.get())) {
         LOG(ERROR) << "SGM匹配失败！";
         return -1;
     }
     end = std::chrono::steady_clock::now();
-    cost_time = duration_cast<std::chrono::milliseconds>(end - start);
+    cost_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     LOG(INFO) << "SGM Matching...Done! Timing : " << cost_time.count() / 1000.0 << "s";
 
-	//// 显示视差图
-    //// 注意，计算点云不能用disp_mat的数据，它是用来显示和保存结果用的。计算点云要用上面的disparity数组里的数据，是子像素浮点数
-    //cv::Mat disp_mat = cv::Mat(height, width, CV_8UC1);
-    //float min_disp = width, max_disp = -width;
-    //for (std::int32_t i = 0; i < height; i++) {
-    //    for (std::int32_t j = 0; j < width; j++) {
-    //        const float disp = disparity[i * width + j];
-    //        if (disp != Invalid_Float) {
-    //            min_disp = std::min(min_disp, disp);
-    //            max_disp = std::max(max_disp, disp);
-    //        }
-    //    }
-    //}
-    //for (std::int32_t i = 0; i < height; i++) {
-    //    for (std::int32_t j = 0; j < width; j++) {
-    //        const float disp = disparity[i * width + j];
-    //        if (disp == Invalid_Float) {
-    //            disp_mat.data[i * width + j] = 0;
-    //        }
-    //        else {
-    //            disp_mat.data[i * width + j] = static_cast<uchar>((disp - min_disp) / (max_disp - min_disp) * 255);
-    //        }
-    //    }
-    //}
+	// 显示视差图
+    // 注意，计算点云不能用disp_mat的数据，它是用来显示和保存结果用的。计算点云要用上面的disparity数组里的数据，是子像素浮点数
+    cv::Mat disp_mat = cv::Mat(height, width, CV_8UC1);
+    float min_disp = width;
+    float max_disp = 0;
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            const float disp = disparity.get()[i * width + j];
+            if (disp != Invalid_Float) {
+                min_disp = std::min(min_disp, disp);
+                max_disp = std::max(max_disp, disp);
+            }
+        }
+    }
+    // 视差图(x, y)d = (视差结果(x, y)d - min_d) / (max_d - min_d) * 255 
+    for (int i = 0; i < height; i++) {
+        for (int j = 0; j < width; j++) {
+            const float disp = disparity.get()[i * width + j];
+            if (disp == Invalid_Float) {
+                disp_mat.data[i * width + j] = 0;
+            } else {
+                disp_mat.data[i * width + j] = static_cast<std::uint8_t>((disp - min_disp) / (max_disp - min_disp) * 255);
+            }
+        }
+    }
 
-    //cv::imshow("视差图", disp_mat);
-    //cv::Mat disp_color;
+    cv::imshow("disparity map", disp_mat);
+    cv::Mat disp_color;
     //applyColorMap(disp_mat, disp_color, cv::COLORMAP_JET);
     //cv::imshow("视差图-伪彩", disp_color);
 
-    //// 保存结果
-    //std::string disp_map_path = argc[1]; disp_map_path += ".d.png";
+    // 保存结果
     //std::string disp_color_map_path = argc[1]; disp_color_map_path += ".c.png";
-    //cv::imwrite(disp_map_path, disp_mat);
+    cv::imwrite(FLAGS_disp_map_save_path, disp_mat);
     //cv::imwrite(disp_color_map_path, disp_color);
-
-    //cv::waitKey(0);
+    cv::waitKey(0);
 
     google::ShutDownCommandLineFlags();
     google::ShutdownGoogleLogging();

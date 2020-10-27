@@ -1,0 +1,70 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+Census5x5	semi_global_matching.h	/^		Census5x5 = 0,$/;"	e	enum:SemiGlobalMatching::CensusSize
+Census9x7	semi_global_matching.h	/^		Census9x7$/;"	e	enum:SemiGlobalMatching::CensusSize
+CensusSize	semi_global_matching.h	/^	enum CensusSize {$/;"	g	class:SemiGlobalMatching
+CensusTransform	semi_global_matching.cpp	/^void SemiGlobalMatching::CensusTransform() const {$/;"	f	class:SemiGlobalMatching
+ComputeCost	semi_global_matching.cpp	/^void SemiGlobalMatching::ComputeCost() const {$/;"	f	class:SemiGlobalMatching
+CostAggregateDagonal_1	sgm_util.cpp	/^void CostAggregateDagonal_1(const std::uint8_t* img_data, const int& height, const int& width,$/;"	f	namespace:sgm_util
+CostAggregateDagonal_2	sgm_util.cpp	/^void CostAggregateDagonal_2(const std::uint8_t* img_data, const int& height, const int& width,$/;"	f	namespace:sgm_util
+CostAggregateLeftRight	sgm_util.cpp	/^void CostAggregateLeftRight(const std::uint8_t* img_data, const int& height, const int& width, $/;"	f	namespace:sgm_util
+CostAggregateUpDown	sgm_util.cpp	/^void CostAggregateUpDown(const std::uint8_t* img_data, const int& height, const int& width,$/;"	f	namespace:sgm_util
+Hamming32	sgm_util.cpp	/^std::uint8_t Hamming32(const std::uint32_t& x, const std::uint32_t& y) {$/;"	f	namespace:sgm_util
+Hamming64	sgm_util.cpp	/^std::uint8_t Hamming64(const std::uint64_t& x, const std::uint64_t& y) {$/;"	f	namespace:sgm_util
+Initialize	semi_global_matching.cpp	/^bool SemiGlobalMatching::Initialize(const int& height, const int& width, const SGMOption& option) {$/;"	f	class:SemiGlobalMatching
+Invalid_Float	main.cpp	/^constexpr auto Invalid_Float = std::numeric_limits<float>::infinity();$/;"	v
+Match	semi_global_matching.cpp	/^bool SemiGlobalMatching::Match(const std::uint8_t* left_image, const std::uint8_t* right_image, float* left_disp) {$/;"	f	class:SemiGlobalMatching
+MedianFilter	sgm_util.cpp	/^void MedianFilter(const float* in, float* out, const int& height, $/;"	f	namespace:sgm_util
+Release	semi_global_matching.cpp	/^void SemiGlobalMatching::Release() {$/;"	f	class:SemiGlobalMatching
+RemoveSpeckles	sgm_util.cpp	/^void RemoveSpeckles(float* disparity_map, const int& height, const int& width,$/;"	f	namespace:sgm_util
+Reset	semi_global_matching.cpp	/^bool SemiGlobalMatching::Reset(const std::uint32_t& height, const std::uint32_t& width, const SGMOption& option) {$/;"	f	class:SemiGlobalMatching
+SAFE_DELETE	sgm_util.h	24;"	d
+SGMOption	semi_global_matching.h	/^		SGMOption(): num_paths(8), min_disparity(0), max_disparity(64), census_size(Census5x5),$/;"	f	struct:SemiGlobalMatching::SGMOption
+SGMOption	semi_global_matching.h	/^	struct SGMOption {$/;"	s	class:SemiGlobalMatching
+SemiGlobalMatching	semi_global_matching.cpp	/^SemiGlobalMatching::SemiGlobalMatching()$/;"	f	class:SemiGlobalMatching
+SemiGlobalMatching	semi_global_matching.h	/^class SemiGlobalMatching {$/;"	c
+census_size	semi_global_matching.h	/^		CensusSize census_size;		\/\/ census窗口尺寸$/;"	m	struct:SemiGlobalMatching::SGMOption
+census_transform_5x5	sgm_util.cpp	/^void census_transform_5x5(const std::uint8_t* source, std::uint32_t* census, $/;"	f	namespace:sgm_util
+census_transform_9x7	sgm_util.cpp	/^void census_transform_9x7(const std::uint8_t* source, std::uint64_t* census, $/;"	f	namespace:sgm_util
+cost_aggr_	semi_global_matching.h	/^    std::uint16_t* cost_aggr_;$/;"	m	class:SemiGlobalMatching
+cost_aggr_1_	semi_global_matching.h	/^    std::uint8_t* cost_aggr_1_;$/;"	m	class:SemiGlobalMatching
+cost_aggr_2_	semi_global_matching.h	/^	std::uint8_t* cost_aggr_2_;$/;"	m	class:SemiGlobalMatching
+cost_aggr_3_	semi_global_matching.h	/^	std::uint8_t* cost_aggr_3_;$/;"	m	class:SemiGlobalMatching
+cost_aggr_4_	semi_global_matching.h	/^	std::uint8_t* cost_aggr_4_;$/;"	m	class:SemiGlobalMatching
+cost_aggr_5_	semi_global_matching.h	/^	std::uint8_t* cost_aggr_5_;$/;"	m	class:SemiGlobalMatching
+cost_aggr_6_	semi_global_matching.h	/^	std::uint8_t* cost_aggr_6_;$/;"	m	class:SemiGlobalMatching
+cost_aggr_7_	semi_global_matching.h	/^	std::uint8_t* cost_aggr_7_;$/;"	m	class:SemiGlobalMatching
+cost_aggr_8_	semi_global_matching.h	/^	std::uint8_t* cost_aggr_8_;$/;"	m	class:SemiGlobalMatching
+cost_init_	semi_global_matching.h	/^	std::uint8_t* cost_init_;$/;"	m	class:SemiGlobalMatching
+height_	semi_global_matching.h	/^	int height_;$/;"	m	class:SemiGlobalMatching
+is_check_lr	semi_global_matching.h	/^		bool	is_check_lr;		\/\/ 是否检查左右一致性$/;"	m	struct:SemiGlobalMatching::SGMOption
+is_check_unique	semi_global_matching.h	/^		bool	is_check_unique;	\/\/ 是否检查唯一性$/;"	m	struct:SemiGlobalMatching::SGMOption
+is_fill_holes	semi_global_matching.h	/^		bool	is_fill_holes;		\/\/ 是否填充视差空洞$/;"	m	struct:SemiGlobalMatching::SGMOption
+is_initialized_	semi_global_matching.h	/^	bool is_initialized_;$/;"	m	class:SemiGlobalMatching
+is_remove_speckles	semi_global_matching.h	/^		bool	is_remove_speckles;	\/\/ 是否移除小的连通区$/;"	m	struct:SemiGlobalMatching::SGMOption
+left_census_	semi_global_matching.h	/^	void* left_census_;$/;"	m	class:SemiGlobalMatching
+left_disp_	semi_global_matching.h	/^	float* left_disp_;$/;"	m	class:SemiGlobalMatching
+left_image_	semi_global_matching.h	/^	const std::uint8_t* left_image_;$/;"	m	class:SemiGlobalMatching
+lr_check_thresh	semi_global_matching.h	/^		float	lr_check_thresh;	\/\/ 左右一致性约束阈值$/;"	m	struct:SemiGlobalMatching::SGMOption
+main	main.cpp	/^int main(int argc, char* argv[]) {$/;"	f
+max_disparity	semi_global_matching.h	/^		int	max_disparity;		\/\/ 最大视差$/;"	m	struct:SemiGlobalMatching::SGMOption
+min_disparity	semi_global_matching.h	/^		int    min_disparity;		\/\/ 最小视差$/;"	m	struct:SemiGlobalMatching::SGMOption
+min_speckle_aera	semi_global_matching.h	/^		int		min_speckle_aera;	\/\/ 最小的连通区面积（像素数）$/;"	m	struct:SemiGlobalMatching::SGMOption
+mismatches_	semi_global_matching.h	/^	std::vector<std::pair<int, int>> mismatches_;$/;"	m	class:SemiGlobalMatching
+num_paths	semi_global_matching.h	/^		std::uint8_t	num_paths;			\/\/ 聚合路径数 4 and 8$/;"	m	struct:SemiGlobalMatching::SGMOption
+occlusions_	semi_global_matching.h	/^	std::vector<std::pair<int, int>> occlusions_;$/;"	m	class:SemiGlobalMatching
+option_	semi_global_matching.h	/^	SGMOption option_;$/;"	m	class:SemiGlobalMatching
+p1	semi_global_matching.h	/^		int  p1;			\/\/ 惩罚项参数P1$/;"	m	struct:SemiGlobalMatching::SGMOption
+p2_init	semi_global_matching.h	/^		int  p2_init;		\/\/ 惩罚项参数P2$/;"	m	struct:SemiGlobalMatching::SGMOption
+right_census_	semi_global_matching.h	/^	void* right_census_;$/;"	m	class:SemiGlobalMatching
+right_disp_	semi_global_matching.h	/^	float* right_disp_;$/;"	m	class:SemiGlobalMatching
+right_image_	semi_global_matching.h	/^	const std::uint8_t* right_image_;$/;"	m	class:SemiGlobalMatching
+sgm_util	sgm_util.cpp	/^namespace sgm_util {$/;"	n	file:
+sgm_util	sgm_util.h	/^namespace sgm_util {$/;"	n
+uniqueness_ratio	semi_global_matching.h	/^		float	uniqueness_ratio;	\/\/ 唯一性约束阈值 （最小代价-次最小代价)\/最小代价 > 阈值 为有效像素$/;"	m	struct:SemiGlobalMatching::SGMOption
+width_	semi_global_matching.h	/^	int width_;$/;"	m	class:SemiGlobalMatching
+~SemiGlobalMatching	semi_global_matching.cpp	/^SemiGlobalMatching::~SemiGlobalMatching() {$/;"	f	class:SemiGlobalMatching
