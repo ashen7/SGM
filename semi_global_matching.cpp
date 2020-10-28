@@ -326,8 +326,9 @@ void SemiGlobalMatching::ComputeDisparity() const {
             // ---遍历视差范围内的所有代价值，输出最小代价值及对应的视差值
             for (int d = min_disparity; d < max_disparity; d++) {
 	            const int d_idx = d - min_disparity;
-                const auto& cost = cost_local[d_idx] = cost_ptr[i * width * disp_range + j * disp_range + d_idx];
-                if (min_cost > cost) {
+                const auto& cost = cost_ptr[i * width * disp_range + j * disp_range + d_idx];
+                cost_local[d_idx] = cost; 
+                if (cost < min_cost) {
                     min_cost = cost;
                     best_disparity = d;
                 }

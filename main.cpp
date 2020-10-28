@@ -164,17 +164,17 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    cv::imshow("left image", left_image);
-    cv::imshow("right image", right_image);
-    cv::imshow("disparity map", disp_mat);
     cv::Mat disp_color;
-    applyColorMap(disp_mat, disp_color, cv::COLORMAP_JET);
-    cv::imshow("disparity map color", disp_color);
+    cv::applyColorMap(disp_mat, disp_color, cv::COLORMAP_JET);
+    //cv::imshow("left image", left_image);
+    //cv::imshow("right image", right_image);
+    //cv::imshow("disparity map", disp_mat);
+    //cv::imshow("disparity map color", disp_color);
 
     // 保存结果
     cv::imwrite(FLAGS_disp_map_save_path, disp_mat);
     cv::imwrite(FLAGS_disp_map_color_save_path, disp_color);
-    cv::waitKey(0);
+    //cv::waitKey(0);
 
     google::ShutDownCommandLineFlags();
     google::ShutdownGoogleLogging();
