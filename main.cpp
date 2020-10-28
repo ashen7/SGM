@@ -105,9 +105,8 @@ int main(int argc, char* argv[]) {
     // 惩罚项P1、P2
     sgm_option.p1 = 10;
     sgm_option.p2_init = 150;
-    // 视差图填充
-    // 视差图填充的结果并不可靠，若工程，不建议填充，若科研，则可填充
-    sgm_option.is_fill_holes = false;
+    // 视差图填充 填充的值不准确(用领域像素填充了那些误匹配的像素值，保证了完整性) 工程没必要填充 科研可填充
+    sgm_option.is_fill_holes = true;
 
     LOG(INFO) << "w = " << width << ", h = " << height << ", " << "d = [" 
               << sgm_option.min_disparity << ", " << sgm_option.max_disparity << "]\n";
