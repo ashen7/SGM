@@ -516,18 +516,19 @@ void CostAggregateDagonal_2(const std::uint8_t* img_data, const int& height, con
 	}
 }
 
-void MedianFilter(const float* in, float* out, const int& height, 
-                  const int& width, const int wnd_size) {
-	const int radius = wnd_size / 2;
-	const int size = wnd_size * wnd_size;
+void MedianFilter(const float* in, float* out, 
+                  const int& height, const int& width, 
+                  const int window_size) {
+	const int radius = window_size / 2;
+	const int size = window_size * window_size;
 
 	// 存储局部窗口内的数据
-	std::vector<float> wnd_data;
-	wnd_data.reserve(size);
+	std::vector<float> window_data;
+	window_data.reserve(size);
 
 	for (int i = 0; i < height; i++) {
 		for (int j = 0; j < width; j++) {
-			wnd_data.clear();
+			window_data.clear();
 
 			// 获取局部窗口数据
 			for (int r = -radius; r <= radius; r++) {
@@ -535,15 +536,15 @@ void MedianFilter(const float* in, float* out, const int& height,
 					const int row = i + r;
 					const int col = j + c;
 					if (row >= 0 && row < height && col >= 0 && col < width) {
-						wnd_data.push_back(in[row * width + col]);
+						window_data.push_back(in[row * width + col]);
 					}
 				}
 			}
 
 			// 排序
-			std::sort(wnd_data.begin(), wnd_data.end());
+			std::sort(window_data.begin(), window_data.end());
 			// 取中值
-			out[i * width + j] = wnd_data[wnd_data.size() / 2];
+			out[i * width + j] = window_data[window_data.size() / 2];
 		}
 	}
 }

@@ -118,10 +118,11 @@ namespace sgm_util {
 	 * \param out				输出，目标数据
 	 * \param height			输入，高度
 	 * \param width				输入，宽度
-	 * \param wnd_size			输入，窗口宽度
+	 * \param window_size		输入，窗口宽度
 	 */
-	void MedianFilter(const float* in, float* out, const int& height, 
-                      const int& width, const int wnd_size);
+	void MedianFilter(const float* in, float* out, 
+                      const int& height, const int& width, 
+                      const int window_size);
 
 
 	/**

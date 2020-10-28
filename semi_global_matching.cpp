@@ -169,8 +169,8 @@ bool SemiGlobalMatching::Match(const std::uint8_t* left_image, const std::uint8_
     }
 
     // 视差填充
-	if(option_.is_fill_holes) {
-		//FillHolesInDispMap();
+	if (option_.is_fill_holes) {
+		FillHolesInDispMap();
 	}
 
     // 中值滤波
@@ -257,7 +257,7 @@ void SemiGlobalMatching::CostAggregation() const {
     const auto& max_disparity = option_.max_disparity;
     assert(max_disparity > min_disparity);
 
-    const int data_size = width_ * height_ * (max_disparity - min_disparity);
+    const int data_size = height_ * width_ * (max_disparity - min_disparity);
     if (data_size <= 0) {
         return;
     }
@@ -265,16 +265,20 @@ void SemiGlobalMatching::CostAggregation() const {
     const auto& P1 = option_.p1;
     const auto& P2_Int = option_.p2_init;
 
-    if (option_.num_paths == 4 || option_.num_paths == 8) {
+    if (option_.num_paths == 4) {
         // 左右聚合
         sgm_util::CostAggregateLeftRight(left_image_, height_, width_, min_disparity, max_disparity, P1, P2_Int, cost_init_, cost_aggr_1_, true);
         sgm_util::CostAggregateLeftRight(left_image_, height_, width_, min_disparity, max_disparity, P1, P2_Int, cost_init_, cost_aggr_2_, false);
         // 上下聚合
 		sgm_util::CostAggregateUpDown(left_image_, height_, width_, min_disparity, max_disparity, P1, P2_Int, cost_init_, cost_aggr_3_, true);
         sgm_util::CostAggregateUpDown(left_image_, height_, width_, min_disparity, max_disparity, P1, P2_Int, cost_init_, cost_aggr_4_, false);
-    }
-
-    if (option_.num_paths == 8) {
+    } else if (option_.num_paths == 8) {
+        // 左右聚合
+        sgm_util::CostAggregateLeftRight(left_image_, height_, width_, min_disparity, max_disparity, P1, P2_Int, cost_init_, cost_aggr_1_, true);
+        sgm_util::CostAggregateLeftRight(left_image_, height_, width_, min_disparity, max_disparity, P1, P2_Int, cost_init_, cost_aggr_2_, false);
+        // 上下聚合
+		sgm_util::CostAggregateUpDown(left_image_, height_, width_, min_disparity, max_disparity, P1, P2_Int, cost_init_, cost_aggr_3_, true);
+        sgm_util::CostAggregateUpDown(left_image_, height_, width_, min_disparity, max_disparity, P1, P2_Int, cost_init_, cost_aggr_4_, false);
         // 对角线1聚合
         sgm_util::CostAggregateDagonal_1(left_image_, height_, width_, min_disparity, max_disparity, P1, P2_Int, cost_init_, cost_aggr_5_, true);
         sgm_util::CostAggregateDagonal_1(left_image_, height_, width_, min_disparity, max_disparity, P1, P2_Int, cost_init_, cost_aggr_6_, false);
@@ -285,11 +289,11 @@ void SemiGlobalMatching::CostAggregation() const {
 
     // 把4/8个方向加起来
     for (int i = 0; i < data_size; i++) {
-        if (option_.num_paths == 4 || option_.num_paths == 8) {
+        if (option_.num_paths == 4) {
             cost_aggr_[i] = cost_aggr_1_[i] + cost_aggr_2_[i] + cost_aggr_3_[i] + cost_aggr_4_[i];
-        }
-        if (option_.num_paths == 8) {
-            cost_aggr_[i] += cost_aggr_5_[i] + cost_aggr_6_[i] + cost_aggr_7_[i] + cost_aggr_8_[i];
+        } else if (option_.num_paths == 8) {
+            cost_aggr_[i] = cost_aggr_1_[i] + cost_aggr_2_[i] + cost_aggr_3_[i] + cost_aggr_4_[i] +
+                            cost_aggr_5_[i] + cost_aggr_6_[i] + cost_aggr_7_[i] + cost_aggr_8_[i];
         }
     }
 }
@@ -345,15 +349,14 @@ void SemiGlobalMatching::ComputeDisparity() const {
                     sec_min_cost = std::min(sec_min_cost, cost);
                 }
 
-                // 判断唯一性约束
-                // 若(min-sec)/min < min*(1-uniquness)，则为无效估计
+                // 判断唯一性约束 若最优的视差值不是唯一的 比如最优视差有相同或相近的值 则直接为无效估计
                 if (sec_min_cost - min_cost <= static_cast<std::uint16_t>(min_cost * (1 - uniqueness_ratio))) {
                     disparity[i * width + j] = Invalid_Float;
                     continue;
                 }
             }
 
-            // ---子像素拟合
+            // 子像素拟合 整数视差值通过前一个和后一个视差值拟合一元二次曲线 曲线的极值点就是视差值子像素
             if (best_disparity == min_disparity 
                     || best_disparity == max_disparity - 1) {
                 disparity[i * width + j] = Invalid_Float;
@@ -364,7 +367,7 @@ void SemiGlobalMatching::ComputeDisparity() const {
             const int idx_2 = best_disparity + 1 - min_disparity;
             const std::uint16_t cost_1 = cost_local[idx_1];
             const std::uint16_t cost_2 = cost_local[idx_2];
-            // 解一元二次曲线极值
+            // 解一元二次曲线极值 d_sub = d + (c1 - c2) / 2(c1 + c2 - 2c0)
             const std::uint16_t denom = std::max(1, cost_1 + cost_2 - 2 * min_cost);
             disparity[i * width + j] = static_cast<float>(best_disparity) + static_cast<float>(cost_1 - cost_2) / (denom * 2.0f);
         }
@@ -406,13 +409,13 @@ void SemiGlobalMatching::ComputeDisparityRight() const {
                 const int d_idx = d - min_disparity;
         		const int col_left = j + d;
         		if (col_left >= 0 && col_left < width) {
-                    const auto& cost = cost_local[d_idx] = cost_ptr[i * width * disp_range + col_left * disp_range + d_idx];
-                    if (min_cost > cost) {
+                    const auto& cost = cost_ptr[i * width * disp_range + col_left * disp_range + d_idx];
+                    cost_local[d_idx] = cost;
+                    if (cost < min_cost) {
                         min_cost = cost;
                         best_disparity = d;
                     }
-        		}
-                else {
+        		} else {
                     cost_local[d_idx] = UINT16_MAX;
                 }
             }
@@ -455,8 +458,8 @@ void SemiGlobalMatching::ComputeDisparityRight() const {
 }
 
 void SemiGlobalMatching::LRCheck() {
-    const int width = width_;
     const int height = height_;
+    const int width = width_;
 
     const float& threshold = option_.lr_check_thresh;
 
@@ -471,7 +474,7 @@ void SemiGlobalMatching::LRCheck() {
         for (int j = 0; j < width; j++) {
             // 左影像视差值
         	auto& disp = left_disp_[i * width + j];
-			if(disp == Invalid_Float){
+			if (disp == Invalid_Float){
 				mismatches.emplace_back(i, j);
 				continue;
 			}
@@ -479,7 +482,7 @@ void SemiGlobalMatching::LRCheck() {
             // 根据视差值找到右影像上对应的同名像素
         	const auto col_right = static_cast<int>(j - disp + 0.5);
             
-        	if(col_right >= 0 && col_right < width) {
+        	if (col_right >= 0 && col_right < width) {
                 // 右影像上同名像素的视差值
                 const auto& disp_r = right_disp_[i * width + col_right];
                 
@@ -492,31 +495,27 @@ void SemiGlobalMatching::LRCheck() {
 					// else 
         			//		pixel in mismatches
 					const int col_rl = static_cast<int>(col_right + disp_r + 0.5);
-					if(col_rl > 0 && col_rl < width){
-						const auto& disp_l = left_disp_[i*width + col_rl];
-						if(disp_l > disp) {
+					if (col_rl > 0 && col_rl < width){
+					    const auto& disp_l = left_disp_[i*width + col_rl];
+						if (disp_l > disp) {
 							occlusions.emplace_back(i, j);
-						}
-						else {
+						} else {
 							mismatches.emplace_back(i, j);
 						}
-					}
-					else{
+					} else {
 						mismatches.emplace_back(i, j);
 					}
 
                     // 让视差值无效
 					disp = Invalid_Float;
                 }
-            }
-            else{
+            } else {
                 // 通过视差值在右影像上找不到同名像素（超出影像范围）
                 disp = Invalid_Float;
 				mismatches.emplace_back(i, j);
             }
         }
     }
-
 }
 
 void SemiGlobalMatching::FillHolesInDispMap() {
