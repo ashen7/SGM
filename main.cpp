@@ -19,6 +19,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <iostream>
+#include <fstream>
 #include <vector>
 #include <chrono>
 #include <memory>
@@ -35,10 +36,12 @@
 
 DEFINE_string(left_image,                   "data/cone/img0.png",           "left image path");
 DEFINE_string(right_image,                  "data/cone/img1.png",           "right image path");
-DEFINE_string(disp_map_save_path,           "results/disp_map.png", "       disparity map save path");
+DEFINE_string(disp_map_save_path,           "results/disp_map.png",         "disparity map save path");
 DEFINE_string(disp_map_color_save_path,     "results/disp_map_color.png",   "disparity map color save path");
+DEFINE_string(output_filename,              "./tools/tmp_output.txt",       "output filename");
 DEFINE_int32(min_disp,                      0,                              "min disparity");
 DEFINE_int32(max_disp,                      64,                             "min disparity");
+DEFINE_double(resolution_ratio,             1.0,                            "resolution ratio");
 
 static constexpr float Invalid_Float = std::numeric_limits<float>::infinity();
 
@@ -68,9 +71,18 @@ int main(int argc, char* argv[]) {
         return -1;
     }
 
+    // resize
+    auto resize_w = left_gray_image.cols * FLAGS_resolution_ratio;
+    auto resize_h = left_gray_image.rows * FLAGS_resolution_ratio;
+    cv::resize(left_gray_image, left_gray_image, cv::Size(resize_w, resize_h), 0, 0, cv::INTER_LINEAR);
+    cv::resize(right_gray_image, right_gray_image, cv::Size(resize_w, resize_h), 0, 0, cv::INTER_LINEAR);
+
     const int height = static_cast<int>(left_gray_image.rows);
     const int width = static_cast<int>(left_gray_image.cols);
     const int image_size = height * width;
+
+    // 打开输出文件
+    std::ofstream outfile(FLAGS_output_filename, std::ios::out);
 
     // 左右影像的灰度数据
     auto left_image_data = std::shared_ptr<std::uint8_t>(new std::uint8_t[image_size], 
@@ -110,32 +122,41 @@ int main(int argc, char* argv[]) {
 
     LOG(INFO) << "w = " << width << ", h = " << height << ", " << "d = [" 
               << sgm_option.min_disparity << ", " << sgm_option.max_disparity << "]\n";
+    outfile << "w = " << width << ", h = " << height << ", " << "d = [" 
+            << sgm_option.min_disparity << ", " << sgm_option.max_disparity << "]\n";
 
     // 定义SGM匹配类实例
     SemiGlobalMatching sgm;
     // 初始化
 	LOG(INFO) << "SGM Initializing...";
+    outfile << "SGM Initializing...\n";
     auto start = std::chrono::steady_clock::now();
     if (!sgm.Initialize(height, width, sgm_option)) {
-        LOG(ERROR) << "SGM初始化失败！" << std::endl;
+        LOG(ERROR) << "SGM初始化失败！";
+        outfile << "SGM初始化失败!\n";
         return -1;
     }
     auto end = std::chrono::steady_clock::now();
     auto cost_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     LOG(INFO) << "SGM Initializing Done! Timing : " << cost_time.count() / 1000.0 << "s";
+    outfile << "SGM Initializing Done! Timing : " << cost_time.count() / 1000.0 << "s\n";
 
     // 匹配
 	LOG(INFO) << "SGM Matching...";
+	outfile << "SGM Matching...\n";
     start = std::chrono::steady_clock::now();
     // disparity数组保存子像素的视差结果
     auto disparity = std::shared_ptr<float>(new float[image_size], [](float* data) { delete []data; });
-    if (!sgm.Match(left_image_data.get(), right_image_data.get(), disparity.get())) {
+    if (!sgm.Match(left_image_data.get(), right_image_data.get(), disparity.get(), outfile)) {
         LOG(ERROR) << "SGM匹配失败！";
+        outfile << "SGM匹配失败!\n";
         return -1;
     }
     end = std::chrono::steady_clock::now();
     cost_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     LOG(INFO) << "SGM Matching...Done! Timing : " << cost_time.count() / 1000.0 << "s";
+    outfile << "SGM Matching...Done! Timing : " << cost_time.count() / 1000.0 << "s\n";
+    outfile.close();
 
 	// 显示视差图
     // 注意，计算点云不能用disp_mat的数据，它是用来显示和保存结果用的。计算点云要用上面的disparity数组里的数据，是子像素浮点数

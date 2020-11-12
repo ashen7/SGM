@@ -19,6 +19,7 @@
 #pragma once
 #include <cstdint>
 #include <cstddef>
+#include <fstream>
 #include <vector>
 
 class SemiGlobalMatching {
@@ -34,9 +35,9 @@ public:
 
 	/** \brief SGM参数结构体 */
 	struct SGMOption {
-		std::uint8_t	num_paths;			// 聚合路径数 4 and 8
+		std::uint8_t	num_paths;	// 聚合路径数 4 and 8
 		int    min_disparity;		// 最小视差
-		int	max_disparity;		// 最大视差
+		int	max_disparity;		    // 最大视差
 
 		CensusSize census_size;		// census窗口尺寸
 
@@ -79,7 +80,7 @@ public:
 	 * \param right_image	输入，右影像数据指针
 	 * \param left_disp	输出，左影像视差图指针，预先分配和影像等尺寸的内存空间
 	 */
-	bool Match(const std::uint8_t* left_image, const std::uint8_t* right_image, float* left_disp);
+	bool Match(const std::uint8_t* left_image, const std::uint8_t* right_image, float* left_disp, std::ofstream& outfile);
 
 	/**
 	 * \brief 重设

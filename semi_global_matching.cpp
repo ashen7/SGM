@@ -20,6 +20,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <fstream>
 #include <vector>
 #include <chrono>
 #include <numeric>
@@ -119,7 +120,7 @@ void SemiGlobalMatching::Release() {
     SAFE_DELETE(right_disp_);
 }
 
-bool SemiGlobalMatching::Match(const std::uint8_t* left_image, const std::uint8_t* right_image, float* left_disp) {
+bool SemiGlobalMatching::Match(const std::uint8_t* left_image, const std::uint8_t* right_image, float* left_disp, std::ofstream& outfile) {
     if (!is_initialized_) {
         return false;
     }
@@ -140,6 +141,8 @@ bool SemiGlobalMatching::Match(const std::uint8_t* left_image, const std::uint8_
     auto cost_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     LOG(INFO) << "1.computing cost!(计算代价: census变换、代价计算) timing : " 
               << cost_time.count() / 1000.0 << "s";
+    outfile << "1.computing cost!(计算代价: census变换、代价计算) timing : " 
+            << cost_time.count() / 1000.0 << "s\n";
 
     start = std::chrono::steady_clock::now();
     // 代价聚合
@@ -148,6 +151,8 @@ bool SemiGlobalMatching::Match(const std::uint8_t* left_image, const std::uint8_
     cost_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     LOG(INFO) << "2.cost aggregating!(代价聚合: 4路聚合(左->右,右->左,上->下,下->上)) timing : " 
               << cost_time.count() / 1000.0 << "s";
+    outfile << "2.cost aggregating!(代价聚合: 4路聚合(左->右,右->左,上->下,下->上)) timing : " 
+            << cost_time.count() / 1000.0 << "s\n";
 
     start = std::chrono::steady_clock::now();
     // 视差计算
@@ -156,6 +161,8 @@ bool SemiGlobalMatching::Match(const std::uint8_t* left_image, const std::uint8_
     cost_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     LOG(INFO) << "3.computing disparities!(计算视差: WTA赢家通吃、唯一性约束、子像素拟合) timing : " 
               << cost_time.count() / 1000.0 << "s";
+    outfile << "3.computing disparities!(计算视差: WTA赢家通吃、唯一性约束、子像素拟合) timing : " 
+            << cost_time.count() / 1000.0 << "s\n";
 
     start = std::chrono::steady_clock::now();
     // 左右一致性检查
@@ -182,6 +189,8 @@ bool SemiGlobalMatching::Match(const std::uint8_t* left_image, const std::uint8_
     cost_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
     LOG(INFO) << "4.postprocessing!(视差优化: 左右一致性检查(减少遮挡和错误的误匹配)、剔除小连通区域、视差填充、中值滤波) timing : " 
               << cost_time.count() / 1000.0 << "s";
+    outfile << "4.postprocessing!(视差优化: 左右一致性检查(减少遮挡和错误的误匹配)、剔除小连通区域、视差填充、中值滤波) timing : " 
+            << cost_time.count() / 1000.0 << "s\n";
 
     // 输出视差图
     memcpy(left_disp, left_disp_, height_ * width_ * sizeof(float));
